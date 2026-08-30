@@ -10,3 +10,8 @@ desktop.ini
 
 # Vercel
 .vercel
+
+# Scratch output from local testing — never part of the site
+live*.html
+livejs.js
+*.tmp
