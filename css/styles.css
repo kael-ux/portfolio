@@ -543,10 +543,17 @@ img { max-width: 100%; height: auto; display: block; }
 .case.is-flagship .case-media img { aspect-ratio: 21 / 9; }
 
 @media (min-width: 861px) {
+  /* Three columns, each holding one label above its own value.
+     `grid-auto-flow: column` fills down then across, which keeps every dt
+     paired with its dd. A plain 3-column grid scatters them, because a <dl>
+     is a flat list of alternating dt/dd children. */
   .case.is-flagship .case-fields {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-md);
+    grid-auto-flow: column;
+    grid-template-rows: auto 1fr;
+    grid-auto-columns: 1fr;
+    gap: var(--space-2xs) var(--space-lg);
+    align-items: start;
   }
   .case.is-flagship .case-fields dt { margin-top: 0; }
   .case.is-flagship .case-fields dd { margin-bottom: 0; }
@@ -626,7 +633,10 @@ img { max-width: 100%; height: auto; display: block; }
   max-width: none;
 }
 
-.case-fields { margin: auto 0 0; }
+/* No `margin-top: auto` here. Cards in a row stretch to equal height, so
+   pushing the fields to the bottom punches a hole in the middle of every card
+   that is shorter than its neighbour. Let them sit under the media. */
+.case-fields { margin: 0; }
 .case-fields dt {
   font-family: var(--font-mono);
   font-size: 0.7rem;
