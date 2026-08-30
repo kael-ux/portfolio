@@ -136,10 +136,16 @@ const PROJECTS = [
   {
     id: '07',
     category: 'web',
-    status: 'soon',
-    title: 'Website project',
-    problem: null, did: null, result: null,
-    image: null, alt: null, extras: []
+    status: 'live',
+    title: 'This site — designed, built and shipped',
+    problem: 'I was offering web work with nothing to show for it. This slot said "coming soon", which is a bad look on the page that is supposed to prove you can do the job.',
+    did: 'Designed and built it from scratch — plain HTML, CSS and JavaScript. No framework, no build step, no dependencies. Two themes, AAA contrast on every line of body text, keyboard navigable throughout, and it still works with JavaScript switched off. Deployed on Vercel with security headers and year-long image caching.',
+    result: 'Live and loading in under half a second. The proof for this one is the page you are reading.',
+    image: null,
+    alt: null,
+    noPhoto: "No photo needed — you're looking at it.",
+    link: { href: 'https://portfoliov2-jade-rho.vercel.app/', label: 'Open it in a new tab' },
+    extras: []
   },
   {
     id: '08',
@@ -354,12 +360,24 @@ const PROJECTS = [
       media = '<p class="case-nophoto">' + esc(job.noPhoto) + '</p>';
     }
 
+    // Supporting shots sit behind a native <details>. Keyboard operable, works
+    // with JavaScript off, and keeps the card scannable until someone opts in.
     let extras = '';
     if (job.extras && job.extras.length) {
-      extras = '<div class="case-extras">' + job.extras.map(function (x) {
-        return '<div class="case-extra">' + pictureFor(x.image, x.alt, false) + '</div>';
-      }).join('') + '</div>';
+      const n = job.extras.length;
+      extras =
+        '<details class="case-more">' +
+        '<summary>' + n + ' more photo' + (n > 1 ? 's' : '') + '</summary>' +
+        '<div class="case-extras">' + job.extras.map(function (x) {
+          return '<div class="case-extra">' + pictureFor(x.image, x.alt, false) + '</div>';
+        }).join('') + '</div>' +
+        '</details>';
     }
+
+    const link = job.link
+      ? '<a class="case-link" href="' + job.link.href + '" target="_blank" rel="noopener">' +
+        esc(job.link.label) + '<span class="case-link-arrow" aria-hidden="true"></span></a>'
+      : '';
 
     // Own machines are labelled as such. An inflated claim a visitor catches
     // costs the credibility of every other entry on the page.
@@ -367,7 +385,11 @@ const PROJECTS = [
       ? '<span class="case-tag case-tag-own">My own machine</span>'
       : '';
 
-    return '<li class="case reveal" data-category="' + job.category + '"' + stagger + '>' +
+    // Bento: the first live entry is the flagship and takes the full width.
+    // It is the strongest job on the page and the only one with a hard number.
+    const flagship = index === 0 ? ' is-flagship' : '';
+
+    return '<li class="case reveal' + flagship + '" data-category="' + job.category + '"' + stagger + '>' +
       '<div class="case-head">' +
         '<span class="case-id">' + esc(job.id) + '</span>' +
         '<span class="case-tag">' + esc(cat) + '</span>' +
@@ -381,6 +403,7 @@ const PROJECTS = [
         '<dt>What I did</dt><dd>' + esc(job.did) + '</dd>' +
         '<dt>Result</dt><dd>' + esc(job.result) + '</dd>' +
       '</dl>' +
+      link +
       '</li>';
   }
 
@@ -652,6 +675,64 @@ const PROJECTS = [
         submitBtn.textContent = 'Send message';
       });
     });
+  }
+
+  /* ---- Full-bleed band parallax ---------------------------------------- */
+  /*
+   * Deliberately restrained. The rules it obeys:
+   *
+   *   - Only the decorative image moves. No text, no control, nothing anyone
+   *     needs to read or click ever shifts under them.
+   *   - Maximum drift is 28px. It reads as depth, not as movement.
+   *   - The scroll position is never touched — no scroll-jacking.
+   *   - prefers-reduced-motion switches it off completely, and the image sits
+   *     at its neutral position.
+   *   - If any of this fails to run, the image simply doesn't move. Nothing
+   *     is hidden or broken by its absence.
+   */
+
+  const band = document.querySelector('.band');
+  const bandImg = document.getElementById('band-img');
+
+  if (band && bandImg && !reduceMotion.matches) {
+    const MAX_SHIFT = 28;              // px, total travel each way
+    let lastRun = 0;
+
+    function positionBand() {
+      const rect = band.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+
+      // Off screen: don't spend anything on it.
+      if (rect.bottom < 0 || rect.top > vh) return;
+
+      // -1 when the band is entering from the bottom, +1 when leaving the top.
+      const progress = ((vh - rect.top) / (vh + rect.height)) * 2 - 1;
+      bandImg.style.transform = 'translate3d(0,' + (progress * MAX_SHIFT).toFixed(1) + 'px,0)';
+    }
+
+    // Throttled on a timestamp rather than requestAnimationFrame. rAF does not
+    // fire in every context, and when it doesn't the effect silently never
+    // runs — which is exactly the failure that hid a focus bug in the funnel.
+    // A single transform per frame budget is cheap enough to do directly.
+    function onBandScroll() {
+      const now = Date.now();
+      if (now - lastRun < 16) return;
+      lastRun = now;
+      positionBand();
+    }
+
+    window.addEventListener('scroll', onBandScroll, { passive: true });
+    window.addEventListener('resize', onBandScroll, { passive: true });
+    positionBand();
+
+    // Turned on mid-session: stop moving and reset to neutral.
+    if (typeof reduceMotion.addEventListener === 'function') {
+      reduceMotion.addEventListener('change', function (e) {
+        if (!e.matches) return;
+        window.removeEventListener('scroll', onBandScroll);
+        bandImg.style.transform = '';
+      });
+    }
   }
 
   /* ---- Footer year ---------------------------------------------------- */

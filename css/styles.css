@@ -536,10 +536,75 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .case-media img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
 
+/* Bento: the flagship job takes the full row. It has the only hard number on
+   the site, so it gets the space rather than sitting in a uniform grid. */
+.case.is-flagship { grid-column: 1 / -1; }
+.case.is-flagship h3 { font-size: 1.55rem; }
+.case.is-flagship .case-media img { aspect-ratio: 21 / 9; }
+
+@media (min-width: 861px) {
+  .case.is-flagship .case-fields {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+  }
+  .case.is-flagship .case-fields dt { margin-top: 0; }
+  .case.is-flagship .case-fields dd { margin-bottom: 0; }
+}
+
+/* Supporting photos, collapsed until asked for. */
+.case-more { margin-bottom: var(--space-sm); }
+
+.case-more summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+  list-style: none;
+}
+.case-more summary::-webkit-details-marker { display: none; }
+.case-more summary::after {
+  content: "";
+  width: 7px; height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(-1px, -1px);
+  transition: transform var(--t-fast) var(--ease);
+}
+.case-more[open] summary::after { transform: rotate(-135deg) translate(-1px, -1px); }
+.case-more summary:hover { color: var(--accent-hover); }
+
+.case-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 44px;
+  margin-top: var(--space-sm);
+  font-weight: 600;
+  font-size: 0.96rem;
+  text-decoration: none;
+}
+.case-link:hover { text-decoration: underline; }
+.case-link-arrow {
+  width: 7px; height: 7px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform var(--t-fast) var(--ease);
+}
+.case-link:hover .case-link-arrow { transform: rotate(45deg) translate(2px, -2px); }
+
 .case-extras {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-xs);
+  margin-top: var(--space-xs);
   margin-bottom: var(--space-sm);
 }
 .case-extra {
@@ -605,6 +670,81 @@ img { max-width: 100%; height: auto; display: block; }
 
 @media (max-width: 860px) {
   .case-grid { grid-template-columns: 1fr; gap: var(--space-md); }
+}
+
+/* ---------- 5d1. Full-bleed band ------------------------------------------ */
+/*
+ * Breaks the container to the full viewport width. The image is decorative
+ * (empty alt, aria-hidden) — every word sits in real text on top of a scrim,
+ * so contrast is against a known colour, not against a photograph.
+ */
+
+.band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-block: var(--space-2xl);
+  padding-block: clamp(var(--space-2xl), 10vw, 140px);
+  padding-inline: var(--space-md);
+}
+
+.band-media {
+  position: absolute;
+  inset: -8% 0;          /* over-tall, so a few px of drift never exposes an edge */
+  z-index: -2;
+}
+.band-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+  will-change: transform;
+}
+
+/* Scrim. Without it, text sits on an unpredictable photo and contrast is a
+   gamble — this makes it a measured value instead. */
+.band::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    to right,
+    rgba(6, 10, 12, 0.94) 0%,
+    rgba(6, 10, 12, 0.88) 42%,
+    rgba(6, 10, 12, 0.55) 100%
+  );
+}
+
+.band-inner {
+  max-width: var(--wrap);
+  margin-inline: auto;
+}
+
+.band-stat { margin: 0 0 var(--space-xs); }
+
+.band-number {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 2rem + 7vw, 7rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: #E8EEF1;                 /* fixed: the scrim is dark in both themes */
+  font-variant-numeric: tabular-nums;
+}
+
+.band-heading {
+  margin: 0 0 var(--space-sm);
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.1rem);
+  color: #E8EEF1;
+}
+
+.band-copy {
+  margin: 0;
+  max-width: 46ch;
+  color: #C4CFD5;
+  font-size: 1.02rem;
 }
 
 /* ---------- 5d2. Q&A ------------------------------------------------------ */
@@ -932,6 +1072,10 @@ img { max-width: 100%; height: auto; display: block; }
      preference changes after load, the final state still holds. */
   .js .reveal { opacity: 1; transform: none; }
   .js .reveal.is-visible { transition: none; transition-delay: 0ms; }
+
+  /* Parallax off at the CSS level too, so an inline transform set before the
+     preference changed cannot leave the image offset. */
+  .band-media img { transform: none !important; will-change: auto; }
 
   html { scroll-behavior: auto; }
   *, *::before, *::after {
