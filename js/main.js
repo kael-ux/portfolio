@@ -135,6 +135,21 @@ const PROJECTS = [
   },
   {
     id: '07',
+    category: 'tech',
+    status: 'live',
+    title: 'Stuttering in Valheim, and 60–70°C sitting idle',
+    problem: 'A gaming PC was stuttering hard in Valheim. It was also sitting at 60–70°C just idling — before any game was even loaded, which is where the real problem showed.',
+    did: 'Full strip and clean: dust out of the case, the filters and every fan. Then pulled the CPU cooler, cleaned off the dried-out thermal paste and repasted it.',
+    result: 'Idle temps came down to the sub-50s, from 60–70°C. The stuttering went with the heat, and not a single part was replaced.',
+    image: 'valheim-service',
+    alt: 'Inside the machine mid-service: the CPU tower cooler and Radeon graphics card, case open and two fans removed.',
+    extras: [
+      { image: 'valheim-dust', alt: 'The case top panel lifted off, its mesh filter grey with built-up dust.' },
+      { image: 'valheim-finished', alt: 'The machine back together and powered up, red case lighting on behind the glass side panel.' }
+    ]
+  },
+  {
+    id: '08',
     category: 'web',
     status: 'live',
     title: 'This site — designed, built and shipped',
@@ -148,7 +163,7 @@ const PROJECTS = [
     extras: []
   },
   {
-    id: '08',
+    id: '09',
     category: 'video',
     status: 'soon',
     title: 'Video edit',
