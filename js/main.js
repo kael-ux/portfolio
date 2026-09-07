@@ -368,9 +368,15 @@ const PROJECTS = [
         '</li>';
     }
 
+    // A real <button>, not a click handler on the image, so it is keyboard
+    // reachable and announced as something you can activate.
     let media = '';
     if (job.image) {
-      media = '<div class="case-media">' + pictureFor(job.image, job.alt, index === 0) + '</div>';
+      media = '<div class="case-media">' +
+        '<button type="button" class="media-btn" data-full="' + job.image + '" ' +
+        'aria-label="View larger: ' + esc(job.alt) + '">' +
+        pictureFor(job.image, job.alt, index === 0) +
+        '</button></div>';
     } else if (job.noPhoto) {
       media = '<p class="case-nophoto">' + esc(job.noPhoto) + '</p>';
     }
@@ -384,7 +390,11 @@ const PROJECTS = [
         '<details class="case-more">' +
         '<summary>' + n + ' more photo' + (n > 1 ? 's' : '') + '</summary>' +
         '<div class="case-extras">' + job.extras.map(function (x) {
-          return '<div class="case-extra">' + pictureFor(x.image, x.alt, false) + '</div>';
+          return '<div class="case-extra">' +
+            '<button type="button" class="media-btn" data-full="' + x.image + '" ' +
+            'aria-label="View larger: ' + esc(x.alt) + '">' +
+            pictureFor(x.image, x.alt, false) +
+            '</button></div>';
         }).join('') + '</div>' +
         '</details>';
     }
@@ -690,6 +700,158 @@ const PROJECTS = [
         submitBtn.textContent = 'Send message';
       });
     });
+  }
+
+  /* ---- Photo viewer ----------------------------------------------------- */
+  /*
+   * Native <dialog>. The browser supplies Escape, the backdrop, focus
+   * trapping and inertness of the page behind — all things a hand-rolled
+   * modal gets wrong. We only add zoom and pan on top.
+   */
+
+  const lightbox = document.getElementById('lightbox');
+
+  if (lightbox && typeof lightbox.showModal === 'function') {
+    const lbImg = document.getElementById('lightbox-img');
+    const lbStage = document.getElementById('lightbox-stage');
+    const lbCaption = document.getElementById('lightbox-caption');
+    const lbLevel = document.getElementById('zoom-level');
+    const btnIn = document.getElementById('zoom-in');
+    const btnOut = document.getElementById('zoom-out');
+    const btnReset = document.getElementById('zoom-reset');
+    const btnClose = document.getElementById('lightbox-close');
+
+    const MIN = 1, MAX = 4, STEP = 0.5;
+    let scale = 1, panX = 0, panY = 0;
+    let dragging = false, startX = 0, startY = 0;
+    let opener = null;
+
+    function apply() {
+      lbImg.style.transform =
+        'translate(' + panX.toFixed(0) + 'px,' + panY.toFixed(0) + 'px) scale(' + scale + ')';
+      lbLevel.textContent = Math.round(scale * 100) + '%';
+      btnIn.disabled = scale >= MAX;
+      btnOut.disabled = scale <= MIN;
+      btnReset.disabled = scale === 1 && panX === 0 && panY === 0;
+      lbStage.classList.toggle('is-zoomed', scale > 1);
+    }
+
+    function setScale(next) {
+      const clamped = Math.min(MAX, Math.max(MIN, next));
+      if (clamped === scale) return;
+      scale = clamped;
+      if (scale === 1) { panX = 0; panY = 0; }   // snap back when fully out
+      apply();
+    }
+
+    function reset() { scale = 1; panX = 0; panY = 0; apply(); }
+
+    function open(slug, alt, trigger) {
+      opener = trigger || null;
+      // WebP with no <picture> here: every browser that supports <dialog>
+      // supports WebP, so there is nothing to negotiate.
+      lbImg.src = 'assets/img/' + slug + '.webp';
+      lbImg.alt = alt || '';
+      lbCaption.textContent = alt || '';
+      reset();
+      lightbox.showModal();
+    }
+
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.media-btn');
+      if (!btn) return;
+      const img = btn.querySelector('img');
+      open(btn.dataset.full, img ? img.alt : '', btn);
+    });
+
+    /* Cleanup runs on every path that can close the viewer, not only on the
+       dialog's `close` event. That event is not reliably delivered in every
+       context, and if it is missed the visitor lands back on the page with
+       focus stranded inside a closed dialog. Idempotent, so firing twice is
+       harmless. */
+    function cleanup() {
+      lbImg.removeAttribute('src');
+      const target = opener;
+      opener = null;
+      if (target && document.contains(target)) {
+        target.focus({ preventScroll: true });
+        // Belt and braces: closing a dialog can move focus after our call.
+        window.setTimeout(function () {
+          if (document.activeElement !== target) target.focus({ preventScroll: true });
+        }, 0);
+      }
+    }
+
+    function closeLightbox() {
+      if (lightbox.open) lightbox.close();
+      cleanup();
+    }
+
+    btnIn.addEventListener('click', function () { setScale(scale + STEP); });
+    btnOut.addEventListener('click', function () { setScale(scale - STEP); });
+    btnReset.addEventListener('click', reset);
+    btnClose.addEventListener('click', closeLightbox);
+
+    // Double-click / double-tap toggles between fit and 2x.
+    lbStage.addEventListener('dblclick', function () {
+      setScale(scale > 1 ? MIN : 2);
+    });
+
+    // Clicking the backdrop closes. The dialog fills its own box, so anything
+    // outside .lightbox-stage / .lightbox-bar is backdrop.
+    lightbox.addEventListener('click', function (e) {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    /* Drag to pan, but only when zoomed in — otherwise dragging does nothing
+       and feels broken. Pointer events cover mouse, touch and pen at once. */
+    lbStage.addEventListener('pointerdown', function (e) {
+      if (scale <= 1) return;
+      dragging = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+      lbStage.classList.add('is-dragging');
+      lbStage.setPointerCapture(e.pointerId);
+    });
+
+    lbStage.addEventListener('pointermove', function (e) {
+      if (!dragging) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      apply();
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      lbStage.classList.remove('is-dragging');
+      if (e && e.pointerId != null && lbStage.hasPointerCapture(e.pointerId)) {
+        lbStage.releasePointerCapture(e.pointerId);
+      }
+    }
+    lbStage.addEventListener('pointerup', endDrag);
+    lbStage.addEventListener('pointercancel', endDrag);
+
+    // + and - work from the keyboard too, once the dialog has focus.
+    lightbox.addEventListener('keydown', function (e) {
+      if (e.key === '+' || e.key === '=') { e.preventDefault(); setScale(scale + STEP); }
+      else if (e.key === '-' || e.key === '_') { e.preventDefault(); setScale(scale - STEP); }
+      else if (e.key === '0') { e.preventDefault(); reset(); }
+    });
+
+    // Escape closes the dialog natively, which is the one path we cannot wrap
+    // in closeLightbox() — so the `close` event is still listened for. Where
+    // it does fire, cleanup has already run and is a no-op.
+    lightbox.addEventListener('close', cleanup);
+
+    // Fallback for environments that do not deliver the `close` event: if the
+    // dialog stops being open without cleanup having run, catch it here.
+    lightbox.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      window.setTimeout(function () { if (!lightbox.open) cleanup(); }, 0);
+    });
+
+    apply();
   }
 
   /* ---- Full-bleed band parallax ---------------------------------------- */

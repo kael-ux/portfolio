@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=6">
+<link rel="stylesheet" href="css/styles.css?v=9">
 </head>
 <body>
 
@@ -448,6 +448,36 @@
   </div>
 </footer>
 
-<script src="js/main.js?v=6" defer></script>
+<!-- Photo viewer. Built on native <dialog> so Escape, focus trapping and the
+     backdrop are the browser's job, not hand-rolled. Added by JS only — with
+     scripting off the photos stay ordinary images and nothing is lost. -->
+<dialog class="lightbox" id="lightbox" aria-label="Photo viewer">
+  <div class="lightbox-stage" id="lightbox-stage">
+    <img id="lightbox-img" alt="" draggable="false">
+  </div>
+
+  <div class="lightbox-bar">
+    <p class="lightbox-caption" id="lightbox-caption"></p>
+
+    <div class="lightbox-controls">
+      <button type="button" class="lb-btn" id="zoom-out" aria-label="Zoom out">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 20.5 20.5M7.5 10.5h6"/></svg>
+      </button>
+
+      <span class="lb-level" id="zoom-level" role="status" aria-live="polite">100%</span>
+
+      <button type="button" class="lb-btn" id="zoom-in" aria-label="Zoom in">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.4 15.4 20.5 20.5M7.5 10.5h6M10.5 7.5v6"/></svg>
+      </button>
+
+      <button type="button" class="lb-btn lb-btn-text" id="zoom-reset">Reset</button>
+      <button type="button" class="lb-btn lb-btn-text lb-close" id="lightbox-close">Close</button>
+    </div>
+  </div>
+
+  <p class="lightbox-hint" id="lightbox-hint">Drag to move the photo when it's zoomed in. Press Escape to close.</p>
+</dialog>
+
+<script src="js/main.js?v=9" defer></script>
 </body>
 </html>

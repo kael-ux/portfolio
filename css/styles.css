@@ -637,18 +637,33 @@ img { max-width: 100%; height: auto; display: block; }
    pushing the fields to the bottom punches a hole in the middle of every card
    that is shorter than its neighbour. Let them sit under the media. */
 .case-fields { margin: 0; }
+/* Field labels are the thing the eye uses to navigate a card, so they are
+   built as soft-bordered chips rather than small coloured text: bigger, less
+   letter-spacing, and a shape that can be found at a glance. */
 .case-fields dt {
+  display: inline-flex;
+  align-items: center;
+  /* A grid item blockifies inline-flex and stretches to its column, which
+     turns the pill into a bar. These keep it hugging its text everywhere. */
+  justify-self: start;
+  width: fit-content;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent);
-  margin-top: var(--space-sm);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 11px;
+  margin-top: var(--space-md);
 }
 .case-fields dt:first-child { margin-top: 0; }
+
 .case-fields dd {
-  margin: 4px 0 0;
-  font-size: 0.98rem;
+  margin: 10px 0 0;
+  font-size: 1.02rem;      /* was 0.98 — this is the copy people actually read */
+  line-height: 1.62;
   color: var(--text);
 }
 
@@ -984,6 +999,147 @@ img { max-width: 100%; height: auto; display: block; }
 
 @media (max-width: 860px) {
   .contact-grid { grid-template-columns: 1fr; gap: var(--space-lg); }
+}
+
+/* ---------- 5g. Photo viewer --------------------------------------------- */
+
+/* Photos become buttons only when scripting is available. Without JS they are
+   plain images and the cursor never promises something that won't happen. */
+.media-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.media-btn img { transition: transform var(--t-base) var(--ease); }
+
+@media (hover: hover) and (pointer: fine) {
+  .media-btn:hover img { transform: scale(1.02); }
+}
+
+.lightbox {
+  width: min(96vw, 1400px);
+  max-width: none;
+  height: min(94vh, 1000px);
+  max-height: none;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+.lightbox::backdrop { background: rgba(4, 8, 10, 0.82); }
+.lightbox[open] { display: flex; flex-direction: column; }
+
+.lightbox-stage {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--surface);
+  touch-action: none;          /* we handle dragging ourselves */
+}
+.lightbox-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.lightbox-stage.is-zoomed { cursor: grab; }
+.lightbox-stage.is-dragging { cursor: grabbing; }
+
+.lightbox-bar {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.lightbox-caption {
+  margin: 0;
+  flex: 1 1 260px;
+  min-width: 0;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.lightbox-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.lb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-xs);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
+}
+.lb-btn:hover { background: var(--surface-2); border-color: var(--accent); }
+.lb-btn:disabled { opacity: 0.45; cursor: default; }
+.lb-btn:disabled:hover { background: var(--surface); border-color: var(--border); }
+.lb-btn svg {
+  width: 20px; height: 20px;
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.lb-btn-text { padding-inline: var(--space-sm); }
+.lb-close { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.lb-close:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: var(--on-accent); }
+
+.lb-level {
+  min-width: 4.2ch;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.lightbox-hint {
+  flex: none;
+  margin: 0;
+  padding: 0 var(--space-md) var(--space-sm);
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  max-width: none;
+}
+
+@media (max-width: 560px) {
+  .lightbox { width: 100vw; height: 100vh; border-radius: 0; border: 0; }
+  .lightbox-caption { flex-basis: 100%; }
+  .lightbox-controls { width: 100%; justify-content: space-between; }
+  .lightbox-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .media-btn img { transition: none; }
+  .media-btn:hover img { transform: none; }
 }
 
 /* ---------- 6. Footer ---------------------------------------------------- */
