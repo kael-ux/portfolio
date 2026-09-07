@@ -381,22 +381,27 @@ const PROJECTS = [
       media = '<p class="case-nophoto">' + esc(job.noPhoto) + '</p>';
     }
 
-    // Supporting shots sit behind a native <details>. Keyboard operable, works
-    // with JavaScript off, and keeps the card scannable until someone opts in.
+    /* Supporting shots as an always-visible thumbnail strip.
+     *
+     * These used to sit behind a collapsed <details>. The problem with that is
+     * nobody expands it — the extra evidence existed but went unseen. Small
+     * thumbnails show at a glance that there is more to a job, and each one is
+     * a single tap from the full-size viewer. */
     let extras = '';
     if (job.extras && job.extras.length) {
       const n = job.extras.length;
+      const label = n + ' more photo' + (n > 1 ? 's' : '');
       extras =
-        '<details class="case-more">' +
-        '<summary>' + n + ' more photo' + (n > 1 ? 's' : '') + '</summary>' +
-        '<div class="case-extras">' + job.extras.map(function (x) {
-          return '<div class="case-extra">' +
-            '<button type="button" class="media-btn" data-full="' + x.image + '" ' +
+        '<div class="case-thumbs">' +
+        '<p class="case-thumbs-label">' + label + '</p>' +
+        '<div class="case-thumbs-row" role="group" aria-label="' + label + ' from this job">' +
+        job.extras.map(function (x) {
+          return '<button type="button" class="media-btn thumb" data-full="' + x.image + '" ' +
             'aria-label="View larger: ' + esc(x.alt) + '">' +
             pictureFor(x.image, x.alt, false) +
-            '</button></div>';
-        }).join('') + '</div>' +
-        '</details>';
+            '</button>';
+        }).join('') +
+        '</div></div>';
     }
 
     const link = job.link

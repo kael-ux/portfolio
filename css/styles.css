@@ -559,33 +559,53 @@ img { max-width: 100%; height: auto; display: block; }
   .case.is-flagship .case-fields dd { margin-bottom: 0; }
 }
 
-/* Supporting photos, collapsed until asked for. */
-.case-more { margin-bottom: var(--space-sm); }
+/* Supporting photos: a small always-visible strip, so a visitor can see there
+   is more to a job without having to discover a toggle first. */
+.case-thumbs { margin-bottom: var(--space-sm); }
 
-.case-more summary {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  min-height: 44px;
+.case-thumbs-label {
+  margin: 0 0 var(--space-xs);
   font-family: var(--font-mono);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
-  cursor: pointer;
-  list-style: none;
+  color: var(--text-muted);
+  max-width: none;
 }
-.case-more summary::-webkit-details-marker { display: none; }
-.case-more summary::after {
-  content: "";
-  width: 7px; height: 7px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg) translate(-1px, -1px);
-  transition: transform var(--t-fast) var(--ease);
+
+.case-thumbs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
 }
-.case-more[open] summary::after { transform: rotate(-135deg) translate(-1px, -1px); }
-.case-more summary:hover { color: var(--accent-hover); }
+
+/* .media-btn sets width:100% and is declared later in this file, so a bare
+   .thumb rule loses the cascade and the thumbnail renders full size. The
+   doubled class outranks it. */
+.media-btn.thumb {
+  width: 92px;
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+  transition: border-color var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
+}
+.media-btn.thumb img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .media-btn.thumb:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .media-btn.thumb:hover img { transform: none; }   /* the tile lifts, not the picture */
+}
+
+@media (max-width: 380px) {
+  .media-btn.thumb { width: 78px; }
+}
 
 .case-link {
   display: inline-flex;
@@ -607,19 +627,6 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .case-link:hover .case-link-arrow { transform: rotate(45deg) translate(2px, -2px); }
 
-.case-extras {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-xs);
-  margin-top: var(--space-xs);
-  margin-bottom: var(--space-sm);
-}
-.case-extra {
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.case-extra img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
 
 /* Honest placeholder where a photo would sit. */
 .case-nophoto {
