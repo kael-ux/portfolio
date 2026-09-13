@@ -49,7 +49,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=38">
+<link rel="stylesheet" href="css/styles.css?v=39">
 </head>
 <body>
 
@@ -97,7 +97,7 @@
 
 <main id="main">
 
-  <section class="hero" id="top">
+  <section class="hero hero-centred" id="top">
     <div class="wrap">
       <div class="hero-rail">
         <p class="eyebrow">Available for work</p>
@@ -129,12 +129,94 @@
     </div>
   </section>
 
+  <!-- =====================================================================
+       THE BENCH
+       The work is the second thing on the page, not the fifth. Pick a name
+       and the ring holds still while that job's record opens underneath it.
+       The full written log is one button away for anyone who wants all ten.
+       ===================================================================== -->
+  <section class="section room-work" id="work">
+    <div class="wrap bench-head">
+      <p class="bench-title" id="bench-title">The bench &mdash; drag to turn it</p>
+      <button type="button" class="bench-ctl" id="bench-pause" aria-pressed="false">Pause</button>
+    </div>
+
+    <div class="bench-strip" id="bench-strip" tabindex="0" role="group" aria-label="Photograph ring &mdash; drag to turn, or use the arrow keys">
+      <div class="dot-field" id="dot-field" aria-hidden="true"></div>
+      <div class="bench-dust" id="bench-dust" aria-hidden="true"></div>
+      <div class="ring" id="bench-track"></div>
+
+      <!-- Fixed to the frame, not to the ring. The clock is real local time,
+           read off the reader's own machine. -->
+      <div class="bench-corners" aria-hidden="true">
+        <span class="bc-tl">Cael &middot; <b>Build &amp; repair</b></span>
+        <span class="bc-tr">Manila <span class="bench-clock" id="bench-clock">--:--:--</span></span>
+        <span class="bc-bl" id="bench-count"></span>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <!-- The index. A turning ring cannot be tabbed through, so this list is
+           the design answer and the accessibility answer at once. -->
+      <div class="index-head">
+        <p class="eyebrow">Service log</p>
+        <p class="index-hint">Pick one to hold the ring and read what was done.</p>
+      </div>
+      <ul class="ring-index" id="ring-index" aria-label="Jobs"></ul>
+
+      <div class="readout" id="work-readout"></div>
+      <p class="visually-hidden" id="readout-status" role="status" aria-live="polite"></p>
+
+      <!-- Everything, for anyone who wants everything. -->
+      <div class="log-all">
+        <button type="button" class="work-more" id="work-more"
+                aria-expanded="false" aria-controls="work-log-panel">
+          <span class="work-more-label">Read every job</span>
+          <span class="work-more-mark" aria-hidden="true"></span>
+        </button>
+
+        <div class="log-panel" id="work-log-panel" hidden>
+          <h2 id="work-log-heading">Jobs I&rsquo;ve actually done</h2>
+          <p class="lede section-lede">
+            Real machines, real work. Every entry here is a job I did and documented &mdash;
+            no stock photos, no borrowed portfolios.
+          </p>
+
+          <div class="filters" id="work-filters" role="group" aria-label="Filter jobs by type">
+            <button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="chip" data-filter="tech" aria-pressed="false">Tech support</button>
+            <button type="button" class="chip" data-filter="web" aria-pressed="false">Web</button>
+            <button type="button" class="chip" data-filter="video" aria-pressed="false">Video</button>
+          </div>
+
+          <p class="visually-hidden" id="work-status" role="status" aria-live="polite"></p>
+
+          <ul class="case-grid" id="work-grid"></ul>
+        </div>
+      </div>
+
+      <noscript>
+        <div class="noscript-note">
+          <p>
+            <strong>The job log needs JavaScript to display.</strong>
+            The short version: nine documented jobs &mdash; a high-end Ryzen 9 / RX 7800 XT build
+            running 54&deg;C on air, a full HP laptop teardown with RAM and SSD upgrades,
+            an office desktop built to a budget, two client machines cleaned and serviced,
+            an NVMe drive fitted with a clean Windows install, a BIOS firmware update, a
+            gaming PC whose idle temperatures dropped from 60-70 degrees to the sub-50s
+            after a clean and a repaste, and two websites &mdash; a club landing page and this site.
+          </p>
+        </div>
+      </noscript>
+    </div>
+  </section>
+
   <section class="services" aria-labelledby="services-heading">
     <div class="wrap">
       <h2 class="visually-hidden" id="services-heading">What I do</h2>
 
       <ul class="service-list">
-        <li class="service reveal">
+        <li class="service reveal" data-n="01">
           <span class="service-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false">
               <rect x="2.5" y="4" width="19" height="12.5" rx="1.6"/>
@@ -150,7 +232,7 @@
           </p>
         </li>
 
-        <li class="service reveal">
+        <li class="service reveal" data-n="02">
           <span class="service-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false">
               <rect x="2.5" y="4" width="19" height="16" rx="1.6"/>
@@ -168,7 +250,7 @@
           </p>
         </li>
 
-        <li class="service reveal">
+        <li class="service reveal" data-n="03">
           <span class="service-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false">
               <rect x="2.5" y="4.5" width="19" height="15" rx="1.6"/>
@@ -186,66 +268,6 @@
   </section>
 
   <div class="divider" role="presentation"><span></span></div>
-
-  <section class="section" id="work">
-    <div class="wrap">
-      <p class="eyebrow">Service log</p>
-      <h2>Jobs I've actually done</h2>
-      <p class="lede section-lede">
-        Real machines, real work. Every entry below is a job I did and documented —
-        no stock photos, no borrowed portfolios.
-      </p>
-
-      <div class="filters reveal" id="work-filters" role="group" aria-label="Filter jobs by type">
-        <button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
-        <button type="button" class="chip" data-filter="tech" aria-pressed="false">Tech support</button>
-        <button type="button" class="chip" data-filter="web" aria-pressed="false">Web</button>
-        <button type="button" class="chip" data-filter="video" aria-pressed="false">Video</button>
-      </div>
-
-      <p class="visually-hidden" id="work-status" role="status" aria-live="polite"></p>
-    </div>
-
-    <!-- The bench. Every photograph from every job, passing across a lit
-         surface. Clicking one jumps to that job's written record below. -->
-    <div class="wrap bench-head">
-      <p class="bench-title" id="bench-title">The bench &mdash; drag to turn it</p>
-      <button type="button" class="bench-ctl" id="bench-pause" aria-pressed="false">Pause</button>
-    </div>
-    <div class="bench-strip" id="bench-strip" tabindex="0" role="group" aria-label="Photograph ring &mdash; drag to turn, or use the arrow keys">
-      <div class="dot-field" id="dot-field" aria-hidden="true"></div>
-      <div class="bench-dust" id="bench-dust" aria-hidden="true"></div>
-      <div class="ring" id="bench-track"></div>
-      <ul class="ring-index" id="ring-index" aria-label="Jump to a job"></ul>
-
-      <!-- Fixed to the frame, not to the ring. The clock is real local time,
-           read off the reader's own machine. -->
-      <div class="bench-corners" aria-hidden="true">
-        <span class="bc-tl">Cael &middot; <b>Build &amp; repair</b></span>
-        <span class="bc-tr">Manila <span class="bench-clock" id="bench-clock">--:--:--</span></span>
-        <span class="bc-bl" id="bench-count"></span>
-      </div>
-
-    </div>
-
-    <div class="wrap">
-      <ul class="case-grid" id="work-grid"></ul>
-
-      <noscript>
-        <div class="noscript-note">
-          <p>
-            <strong>The job log needs JavaScript to display.</strong>
-            The short version: seven documented jobs — a high-end Ryzen 9 / RX 7800 XT build
-            running 54&deg;C on air, a full HP laptop teardown with RAM and SSD upgrades,
-            an office desktop built for resale, a client machine cleaned and serviced,
-            an NVMe drive fitted with a clean Windows install, a BIOS firmware update, and a
-            gaming PC whose idle temperatures dropped from 60-70 degrees to the sub-50s
-            after a clean and a repaste.
-          </p>
-        </div>
-      </noscript>
-    </div>
-  </section>
 
   <!-- Full-bleed band. Decorative image, real number. The parallax is a few
        pixels of drift on the image only — never on the text, and switched off

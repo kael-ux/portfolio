@@ -519,6 +519,76 @@ const PROJECTS = [
       '</div>';
   }
 
+  /* The readout.
+   *
+   * The ring shows you the work; this shows you the job. One panel, swapped
+   * in place, so the page stays short and nothing is ever covered. It reuses
+   * the same media buttons as the cards, so the photo viewer reaches these
+   * without a second code path -- the lightbox listens on the document. */
+  function readoutHTML(job) {
+    const cat = CATEGORY_LABEL[job.category] || job.category;
+
+    if (job.status === 'soon') {
+      return '<div class="readout-body readout-body-soon">' +
+        '<div class="readout-detail">' +
+          '<div class="readout-head">' +
+            '<span class="case-id">' + esc(job.id) + '</span>' +
+            '<span class="case-tag">' + esc(cat) + '</span>' +
+          '</div>' +
+          '<h3 class="readout-title">' + esc(job.title) + '</h3>' +
+          '<p class="case-soon-note">Coming soon. This slot is reserved for real work, ' +
+          'not filler \u2014 it stays empty until there is something true to put in it.</p>' +
+        '</div></div>';
+    }
+
+    let media;
+    if (job.image) {
+      media = '<button type="button" class="media-btn" data-full="' + job.image + '" ' +
+        'aria-label="View larger: ' + esc(job.alt) + '">' +
+        pictureFor(job.image, job.alt, false, job.animated) + '</button>';
+    } else {
+      media = '<p class="case-nophoto">' + esc(job.noPhoto || '') + '</p>';
+    }
+
+    let extras = '';
+    if (job.extras && job.extras.length) {
+      extras = '<div class="readout-thumbs">' + job.extras.map(function (x) {
+        return '<button type="button" class="media-btn thumb" data-full="' + x.image + '" ' +
+          'aria-label="View larger: ' + esc(x.alt) + '">' +
+          pictureFor(x.image, x.alt, false) + '</button>';
+      }).join('') + '</div>';
+    }
+
+    let link = '';
+    if (job.link) {
+      const internal = job.link.internal === true;
+      link = '<a class="case-link' + (internal ? ' case-link-internal' : '') + '" ' +
+        'href="' + job.link.href + '"' +
+        (internal ? ' data-immersive' : ' target="_blank" rel="noopener"') + '>' +
+        esc(job.link.label) + '<span class="case-link-arrow" aria-hidden="true"></span></a>';
+    }
+
+    const ownTag = job.ownMachine
+      ? '<span class="case-tag case-tag-own">My own machine</span>' : '';
+
+    return '<div class="readout-body">' +
+      '<div class="readout-media">' + media + extras + '</div>' +
+      '<div class="readout-detail">' +
+        '<div class="readout-head">' +
+          '<span class="case-id">' + esc(job.id) + '</span>' +
+          '<span class="case-tag">' + esc(cat) + '</span>' + ownTag +
+        '</div>' +
+        '<h3 class="readout-title">' + esc(job.title) + '</h3>' +
+        '<dl class="case-fields">' +
+          '<dt>Problem</dt><dd>' + esc(job.problem) + '</dd>' +
+          '<dt>What I did</dt><dd>' + esc(job.did) + '</dd>' +
+          '<dt>Result</dt><dd>' + esc(job.result) + '</dd>' +
+        '</dl>' +
+        checkBlock(job) + link +
+      '</div>' +
+      '</div>';
+  }
+
   function cardHTML(job, index) {
     const cat = CATEGORY_LABEL[job.category] || job.category;
 
@@ -646,26 +716,18 @@ const PROJECTS = [
   });
 
   if (grid) {
-    grid.innerHTML = ORDERED.map(function (job, i) {
-      const html = cardHTML(job, i);
-      // The disclosure trigger goes before the content it reveals, so the
-      // reading order and the tab order both make sense.
-      if (job.id === '04') {
-        return '<li class="work-more-row">' +
-          '<button type="button" class="work-more" id="work-more" ' +
-          'aria-expanded="false" aria-controls="work-grid">' +
-          '<span class="work-more-label">Show 4 more tech support jobs</span>' +
-          '<span class="work-more-mark" aria-hidden="true"></span>' +
-          '</button></li>' + html;
-      }
-      return html;
-    }).join('');
+    grid.innerHTML = ORDERED.map(function (job, i) { return cardHTML(job, i); }).join('');
     observeReveals(grid);          // cards exist now, so watch them too
     animateThumbnails(grid);
   }
 
-  const moreBtn = document.getElementById('work-more');
-  let showSecondary = false;
+  /* The whole written log now sits behind one control, because the index
+   * above it already answers "which job". A second layer of hiding inside
+   * the grid would be hiding work from someone who has explicitly asked to
+   * read all of it, so inside the panel every job shows. */
+  const moreBtn  = document.getElementById('work-more');
+  const logPanel = document.getElementById('work-log-panel');
+  let logOpen = false;
   let activeFilter = 'all';
 
   /* One function decides what is on screen, because visibility is the product
@@ -676,32 +738,11 @@ const PROJECTS = [
     if (!grid) return;
     const cards = grid.querySelectorAll('.case');
     let shown = 0;
-    let hiddenByDisclosure = 0;
 
     cards.forEach(function (card) {
-      const matchesFilter = activeFilter === 'all' || card.dataset.category === activeFilter;
-      const collapsed = card.dataset.secondary === 'true' && !showSecondary;
-
-      if (matchesFilter && collapsed) hiddenByDisclosure++;
-      card.hidden = !matchesFilter || collapsed;
+      card.hidden = !(activeFilter === 'all' || card.dataset.category === activeFilter);
       if (!card.hidden) shown++;
     });
-
-    // The trigger is pointless when the current filter has nothing behind it.
-    const row = grid.querySelector('.work-more-row');
-    if (row) row.hidden = hiddenByDisclosure === 0 && !showSecondary;
-
-    if (moreBtn) {
-      moreBtn.setAttribute('aria-expanded', String(showSecondary));
-      const label = moreBtn.querySelector('.work-more-label');
-      if (label) {
-        // The hidden set is no longer tech-only, so the label counts what is
-        // actually behind the disclosure under the current filter.
-        label.textContent = showSecondary
-          ? 'Show fewer'
-          : 'Show ' + hiddenByDisclosure + ' more job' + (hiddenByDisclosure === 1 ? '' : 's');
-      }
-    }
 
     // Filtering and expanding are deliberate actions, not scrolls. A card
     // brought back this way must appear immediately — never sit at zero
@@ -725,24 +766,34 @@ const PROJECTS = [
     updateWork(fromClick);
   }
 
+  function openLog(open, moveFocus) {
+    logOpen = open;
+    if (logPanel) logPanel.hidden = !open;
+    if (moreBtn) {
+      moreBtn.setAttribute('aria-expanded', String(open));
+      const label = moreBtn.querySelector('.work-more-label');
+      if (label) label.textContent = open ? 'Close the log' : 'Read every job';
+    }
+    if (!open) return;
+    // Cards inside a hidden panel never met the observer, so anything still
+    // waiting on a reveal is shown outright the moment the panel opens.
+    revealAll(grid);
+    updateWork(true);
+    if (moveFocus) {
+      const first = grid && grid.querySelector('.case:not([hidden])');
+      if (first) {
+        first.setAttribute('tabindex', '-1');
+        first.focus({ preventScroll: true });
+        first.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      }
+    }
+  }
+
   if (moreBtn) {
     moreBtn.addEventListener('click', function () {
-      const wasCollapsed = !showSecondary;
-      showSecondary = !showSecondary;
-      updateWork(true);
-
-      // Collapsing can leave the button above the fold with the page scrolled
-      // past where the cards used to be. Bring it back into view, and move
-      // focus to the first revealed card on expand so a keyboard user lands
-      // on the new content rather than being left on the trigger.
-      if (wasCollapsed) {
-        const first = grid.querySelector('.case[data-secondary="true"]:not([hidden])');
-        if (first) {
-          first.setAttribute('tabindex', '-1');
-          first.focus({ preventScroll: true });
-          first.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
-        }
-      } else {
+      const opening = !logOpen;
+      openLog(opening, opening);
+      if (!opening) {
         moreBtn.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
       }
     });
@@ -1408,8 +1459,10 @@ const PROJECTS = [
       // they sit evenly around the ellipse at any instant.
       a.style.setProperty('--ring-dur', CYCLE + 's');
       a.style.setProperty('--ring-delay', (-(CYCLE / shots.length) * i).toFixed(2) + 's');
+      // Eager, not lazy: the ring is the second thing on the page now, and a
+      // card riding a transform does not reliably trigger the lazy observer.
       a.innerHTML =
-        pictureFor(shot.slug, shot.alt, false) +
+        pictureFor(shot.slug, shot.alt, true) +
         '<p class="rc-title">' + esc(CATEGORY_LABEL[shot.job.category] || shot.job.category) + '</p>' +
         '<p class="rc-job">Job ' + esc(shot.job.id) + '</p>';
       benchTrack.appendChild(a);
@@ -1575,57 +1628,94 @@ const PROJECTS = [
       });
     }
 
-    /* The index. A turning ring cannot be tabbed through, so the list is both
-     * the way in and the only keyboard path to it. Naming a job lifts its
-     * photographs out of the ring and dims the rest. */
-    if (ringIndex) {
-      const seen = [];
-      shots.forEach(function (sh) {
-        if (seen.indexOf(sh.job.id) === -1) seen.push(sh.job.id);
-      });
+    /* The index.
+     *
+     * A turning ring cannot be tabbed through, so this list is the design
+     * answer and the accessibility answer at once. It names EVERY job, not
+     * only the photographed ones: a job with no photograph is still a job,
+     * and leaving it out of the index would make it unreachable.
+     *
+     * Naming one holds the ring, lifts that job's photographs out of it, and
+     * opens the record underneath. */
+    const readout = document.getElementById('work-readout');
+    const readoutStatus = document.getElementById('readout-status');
 
-      let active = null;
-      function highlight(id) {
-        active = id;
-        // The ring is script-driven now, so holding it is an explicit call.
-        if (canDrive && !heldByButton) {
-          anims.forEach(function (a) { if (id) { a.pause(); } else { a.play(); } });
-        }
-        const hot = [];
-        benchTrack.querySelectorAll('.ring-card').forEach(function (c) {
-          const hit = id && c.dataset.job === id;
-          c.classList.toggle('is-hot', !!hit);
-          c.classList.toggle('is-dim', !!id && !hit);
-          if (hit) hot.push(c);
-          if (!id) c.style.marginLeft = '';
-        });
-        // Held cards would stack on the same spot, so fan them out.
-        hot.forEach(function (c, n) {
-          c.style.marginLeft = (-92 + (n - (hot.length - 1) / 2) * 208) + 'px';
-        });
+    function hasShots(id) {
+      return shots.some(function (sh) { return sh.job.id === id; });
+    }
+
+    function fanOut(id) {
+      const hot = [];
+      const dimRest = !!id && hasShots(id);
+      benchTrack.querySelectorAll('.ring-card').forEach(function (c) {
+        const hit = id && c.dataset.job === id;
+        c.classList.toggle('is-hot', !!hit);
+        // A job with no photographs has nothing to lift, so dimming the ring
+        // for it would hide the work and put nothing in its place.
+        c.classList.toggle('is-dim', dimRest && !hit);
+        if (hit) hot.push(c);
+        if (!hit) c.style.marginLeft = '';
+      });
+      hot.forEach(function (c, n) {
+        c.style.marginLeft = (-92 + (n - (hot.length - 1) / 2) * 208) + 'px';
+      });
+    }
+
+    function selectJob(id, fromClick, holdRing) {
+      const hold = holdRing !== false;
+      if (hold && canDrive && !heldByButton) {
+        anims.forEach(function (a) { if (id) { a.pause(); } else { a.play(); } });
+      }
+      // Only a deliberate pick lifts a job out of the ring. On arrival the
+      // record is open but the ring keeps turning, because a page that opens
+      // frozen and dimmed shows the work worse than no ring at all.
+      if (hold) fanOut(id);
+      if (ringIndex) {
         ringIndex.querySelectorAll('button').forEach(function (b) {
           b.setAttribute('aria-pressed', String(b.dataset.job === id));
         });
       }
+      const job = ORDERED.filter(function (j) { return j.id === id; })[0];
+      if (readout && job) {
+        readout.innerHTML = readoutHTML(job);
+        animateThumbnails(readout);
+        if (readoutStatus) readoutStatus.textContent = 'Showing job ' + id + ': ' + job.title;
+      }
+      if (fromClick && readout) {
+        readout.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      }
+    }
 
-      seen.forEach(function (id) {
-        const count = shots.filter(function (sh) { return sh.job.id === id; }).length;
+    if (ringIndex) {
+      ORDERED.forEach(function (job) {
+        const n = shots.filter(function (sh) { return sh.job.id === job.id; }).length;
         const li = document.createElement('li');
         const b = document.createElement('button');
         b.type = 'button';
-        b.dataset.job = id;
+        b.dataset.job = job.id;
         b.setAttribute('aria-pressed', 'false');
-        b.textContent = 'Job ' + id + ' — ' + count + (count === 1 ? ' shot' : ' shots');
-        b.addEventListener('mouseenter', function () { highlight(id); });
-        b.addEventListener('focus', function () { highlight(id); });
-        b.addEventListener('mouseleave', function () { if (active === id) highlight(null); });
-        b.addEventListener('blur', function () { if (active === id) highlight(null); });
-        // A click commits to the record itself, which is where the writing is.
-        b.addEventListener('click', function () { window.location.hash = '#job-' + id; });
+        b.innerHTML = '<span class="ri-id">' + esc(job.id) + '</span>' +
+          '<span class="ri-name">' + esc(job.title) + '</span>' +
+          '<span class="ri-n">' + (n ? n + (n === 1 ? ' shot' : ' shots') : 'no photo') + '</span>';
+        b.addEventListener('click', function () { selectJob(job.id, true); });
         li.appendChild(b);
         ringIndex.appendChild(li);
       });
     }
+
+    /* The page opens on the strongest job rather than on an empty frame. An
+     * unselected state here would be a panel asking to be clicked, which
+     * shows nothing and proves nothing. */
+    if (ORDERED.length) selectJob(ORDERED[0].id, false, false);
+
+    /* Clicking a photograph in the ring opens that job here, rather than
+     * throwing the page somewhere else. */
+    benchTrack.addEventListener('click', function (e) {
+      const card = e.target.closest('.ring-card');
+      if (!card) return;
+      e.preventDefault();
+      selectJob(card.dataset.job, true);
+    });
 
     /* Motion that starts on its own needs a real stop. Hover and focus both
      * pause the ring, but neither of those exists on a touchscreen. */
@@ -1660,10 +1750,10 @@ const PROJECTS = [
       if (!hash || hash.length < 2) return;
       const target = grid.querySelector(hash);
       if (target) {
-        if (target.hidden && target.dataset.secondary === 'true') {
-          showSecondary = true;
-          updateWork(true);
-        }
+        // A link straight to a record has to be able to reach it, so the log
+        // opens itself and any filter hiding that card is cleared.
+        if (!logOpen) openLog(true, false);
+        if (target.hidden) applyFilter('all', true);
         target.classList.add('is-target');
       }
     }
