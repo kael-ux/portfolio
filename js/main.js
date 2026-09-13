@@ -1652,7 +1652,12 @@ const PROJECTS = [
         c.classList.toggle('is-hot', !!hit);
         // A job with no photographs has nothing to lift, so dimming the ring
         // for it would hide the work and put nothing in its place.
-        c.classList.toggle('is-dim', dimRest && !hit);
+        const dimmed = dimRest && !hit;
+        c.classList.toggle('is-dim', dimmed);
+        // A faded-out card is not a destination. Taking it out of the tab
+        // order keeps a keyboard from landing on something nobody can see.
+        if (dimmed) { c.setAttribute('tabindex', '-1'); }
+        else { c.removeAttribute('tabindex'); }
         if (hit) hot.push(c);
         if (!hit) c.style.marginLeft = '';
       });
