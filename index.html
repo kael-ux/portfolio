@@ -5,6 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cael — PC Repair, Setup & Web Work</title>
 <meta name="description" content="Tech support, PC servicing, website building and video editing. BSIT graduate, 2024.">
+<link rel="canonical" href="https://portfoliov2-jade-rho.vercel.app/">
+<meta name="theme-color" content="#08090A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F1ED" media="(prefers-color-scheme: light)">
+
+<!-- The share card. Pasted into Messenger, Viber, Discord or a DM, the link
+     now arrives as a picture of real work rather than a bare URL. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Cael">
+<meta property="og:url" content="https://portfoliov2-jade-rho.vercel.app/">
+<meta property="og:title" content="Cael — I fix computers. And I build what runs on them.">
+<meta property="og:description" content="Ten jobs, twelve photographs, every reading taken off the hardware itself. PC repair and builds, landing pages, video.">
+<meta property="og:image" content="https://portfoliov2-jade-rho.vercel.app/assets/og-card.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Inside a white gaming PC, the CPU cooler's own display reading 54 degrees Celsius.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cael — I fix computers. And I build what runs on them.">
+<meta name="twitter:description" content="Ten jobs, twelve photographs, every reading taken off the hardware itself.">
+<meta name="twitter:image" content="https://portfoliov2-jade-rho.vercel.app/assets/og-card.jpg">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="assets/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 
 <!-- Theme bootstrap: runs before first paint so there is no light flash on a dark-mode reload. -->
 <script>
@@ -26,7 +49,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=33">
+<link rel="stylesheet" href="css/styles.css?v=36">
 </head>
 <body>
 
@@ -172,8 +195,29 @@
     </div>
     <div class="bench-strip" id="bench-strip" tabindex="0" role="group" aria-label="Photograph ring &mdash; drag to turn, or use the arrow keys">
       <div class="dot-field" id="dot-field" aria-hidden="true"></div>
+      <div class="bench-dust" id="bench-dust" aria-hidden="true"></div>
       <div class="ring" id="bench-track"></div>
       <ul class="ring-index" id="ring-index" aria-label="Jump to a job"></ul>
+
+      <!-- Fixed to the frame, not to the ring. The clock is real local time,
+           read off the reader's own machine. -->
+      <div class="bench-corners" aria-hidden="true">
+        <span class="bc-tl">Cael &middot; <b>Build &amp; repair</b></span>
+        <span class="bc-tr">Manila <span class="bench-clock" id="bench-clock">--:--:--</span></span>
+        <span class="bc-bl" id="bench-count"></span>
+      </div>
+
+      <div class="bench-boot" id="bench-boot">
+        <div class="bench-boot-in">
+          <p class="bench-pct" id="bench-pct">Loading 0%</p>
+          <div class="bench-track"><div class="bench-fill" id="bench-fill"></div></div>
+          <p class="bench-manifesto">
+            I fix the machine and I build the page it runs. Every reading on this
+            site was taken off the hardware itself. Nothing here is a stock photo
+            and nothing here is a round number.
+          </p>
+        </div>
+      </div>
     </div>
 
     <div class="wrap">

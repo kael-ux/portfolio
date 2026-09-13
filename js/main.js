@@ -1289,6 +1289,8 @@ const PROJECTS = [
   const benchPause = document.getElementById('bench-pause');
   const dotField   = document.getElementById('dot-field');
   const ringIndex  = document.getElementById('ring-index');
+  const benchDust  = document.getElementById('bench-dust');
+  const benchBoot  = document.getElementById('bench-boot');
 
   if (benchTrack) {
     /* The ground. Static by design, and a few dots lit so the grid reads as
@@ -1298,6 +1300,19 @@ const PROJECTS = [
         const d = document.createElement('i');
         if (i % 19 === 5 || i % 31 === 13) d.className = 'lit';
         dotField.appendChild(d);
+      }
+    }
+
+    /* Dust in the beam. Atmosphere only — capped, and skipped outright under
+     * reduced motion rather than animated more slowly. */
+    if (benchDust && !reduceMotion.matches) {
+      for (let i = 0; i < 26; i++) {
+        const m = document.createElement('i');
+        m.style.left = (4 + Math.random() * 92).toFixed(1) + '%';
+        m.style.top = (12 + Math.random() * 76).toFixed(1) + '%';
+        m.style.animationDuration = (9 + Math.random() * 12).toFixed(1) + 's';
+        m.style.animationDelay = '-' + (Math.random() * 14).toFixed(1) + 's';
+        benchDust.appendChild(m);
       }
     }
 
@@ -1334,6 +1349,71 @@ const PROJECTS = [
       cards.push(a);
     });
 
+    /* ---- Corner data ----------------------------------------------------
+     *
+     * Counts are read off what was actually built, never typed in — if a job
+     * is added or a photograph removed, this cannot go stale.
+     */
+    const benchCount = document.getElementById('bench-count');
+    if (benchCount) {
+      const liveJobs = ORDERED.filter(function (j) { return j.status !== 'soon'; }).length;
+      benchCount.textContent = liveJobs + ' jobs · ' + shots.length + ' photographs';
+    }
+
+    /* Real local time in Manila, read from the reader's own machine. If the
+     * browser has no time-zone data the clock is emptied rather than showing
+     * a wrong hour. */
+    const benchClock = document.getElementById('bench-clock');
+    if (benchClock) {
+      const tick = function () {
+        try {
+          benchClock.textContent = new Intl.DateTimeFormat('en-GB', {
+            timeZone: 'Asia/Manila',
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+          }).format(new Date());
+        } catch (e) {
+          benchClock.textContent = '';
+          return;
+        }
+        window.setTimeout(tick, 1000);
+      };
+      tick();
+    }
+
+    /* ---- The counted entrance -------------------------------------------
+     *
+     * It counts, then lifts. Two switches: one fades it, one removes it from
+     * the page outright on an unconditional timer, because the failure mode
+     * that has actually happened in this project three times is the
+     * animation not running at all.
+     */
+    if (benchBoot) {
+      const pct = document.getElementById('bench-pct');
+      const fill = document.getElementById('bench-fill');
+
+      const drop = function () {
+        benchBoot.setAttribute('data-done', 'true');
+        window.setTimeout(function () { benchBoot.setAttribute('data-gone', 'true'); }, 700);
+      };
+      // Fires no matter what else happens above it.
+      window.setTimeout(function () { benchBoot.setAttribute('data-gone', 'true'); }, 4200);
+
+      if (reduceMotion.matches) {
+        drop();
+      } else {
+        let p = 0;
+        const count = function () {
+          p = Math.min(100, p + 3 + Math.random() * 9);
+          if (pct) pct.textContent = 'Loading ' + Math.round(p) + '%';
+          if (fill) fill.style.width = p + '%';
+          if (p < 100) window.setTimeout(count, 55);
+          else window.setTimeout(drop, 380);
+        };
+        count();
+        window.setTimeout(drop, 3200);
+      }
+    }
+
     /* ---- Grab the ring and turn it -------------------------------------
      *
      * The CSS keyframe is the shape of the path. To let a mouse drive it,
@@ -1347,11 +1427,11 @@ const PROJECTS = [
      * grabbed. Nothing depends on this working.
      */
     const RING_KEYFRAMES = [
-      { offset: 0,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.62)', zIndex: 3 },
-      { offset: 0.25, transform: 'translateX(0px) translateY(68px) scale(1.1) rotate(0deg) skewY(0deg)',        filter: 'brightness(1)',   zIndex: 9 },
-      { offset: 0.5,  transform: 'translateX(330px) translateY(30px) scale(.78) rotate(3deg) skewY(-1.6deg)',   filter: 'brightness(.62)', zIndex: 3 },
-      { offset: 0.75, transform: 'translateX(0px) translateY(-54px) scale(.48) rotate(0deg) skewY(0deg)',       filter: 'brightness(.46)', zIndex: 1 },
-      { offset: 1,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.62)', zIndex: 3 }
+      { offset: 0,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.72)', zIndex: 3 },
+      { offset: 0.25, transform: 'translateX(0px) translateY(68px) scale(1.1) rotate(0deg) skewY(0deg)',        filter: 'brightness(1.14)', zIndex: 9 },
+      { offset: 0.5,  transform: 'translateX(330px) translateY(30px) scale(.78) rotate(3deg) skewY(-1.6deg)',   filter: 'brightness(.72)', zIndex: 3 },
+      { offset: 0.75, transform: 'translateX(0px) translateY(-54px) scale(.48) rotate(0deg) skewY(0deg)',       filter: 'brightness(.52)', zIndex: 1 },
+      { offset: 1,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.72)', zIndex: 3 }
     ];
     const CYCLE_MS = CYCLE * 1000;
     const DRAG_FULL_TURN = 900;   // px of drag that equals one revolution
@@ -1371,6 +1451,35 @@ const PROJECTS = [
           delay: -(CYCLE_MS / cards.length) * i
         });
       });
+    }
+
+    /* Which card is standing in the light.
+     *
+     * The front of the turn is offset 0.25 of the cycle. Whichever card is
+     * nearest it gets the lit edge. Stepped on a timer rather than rAF — the
+     * worst a dropped frame can do here is leave the highlight a beat behind,
+     * and rAF has silently failed in this project twice. Without WAAPI no
+     * card is ever marked, which simply means no edge highlight. */
+    if (canDrive && cards.length) {
+      let front = null;
+      const markFront = function () {
+        let best = null, bestD = 2;
+        anims.forEach(function (a, i) {
+          const t = Number(a.currentTime);
+          if (!isFinite(t)) return;
+          let phase = ((t % CYCLE_MS) + CYCLE_MS) % CYCLE_MS / CYCLE_MS;
+          let d = Math.abs(phase - 0.25);
+          if (d > 0.5) d = 1 - d;
+          if (d < bestD) { bestD = d; best = cards[i]; }
+        });
+        if (best !== front) {
+          if (front) front.classList.remove('is-front');
+          if (best) best.classList.add('is-front');
+          front = best;
+        }
+        window.setTimeout(markFront, 180);
+      };
+      markFront();
     }
 
     let idleTimer = null;
