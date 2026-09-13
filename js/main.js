@@ -1506,6 +1506,12 @@ const PROJECTS = [
     const canDrive = typeof Element.prototype.animate === 'function' && !reduceMotion.matches;
     let anims = [];
     let heldByButton = false;
+    /* Picking a job holds the ring too, and that hold has to outrank the idle
+     * clock exactly the way the Pause button does. Without this, any drag or
+     * arrow key afterwards called resumeSoon() and the ring started turning
+     * again 2.6s later WITH the picked cards still pinned in the middle --
+     * so the rest of the ring swept straight through them. */
+    let heldByIndex = false;
 
     if (canDrive) {
       anims = cards.map(function (card, i) {
@@ -1552,7 +1558,9 @@ const PROJECTS = [
     function cancelIdle() { if (idleTimer) { window.clearTimeout(idleTimer); idleTimer = null; } }
     function resumeSoon() {
       cancelIdle();
-      if (heldByButton) return;                 // an explicit Pause outranks idling
+      // Both holds outrank idling: a paused ring and a held selection are
+      // deliberate states, and the clock must not quietly undo either.
+      if (heldByButton || heldByIndex) return;
       idleTimer = window.setTimeout(function () {
         anims.forEach(function (a) { a.play(); });
         benchStrip.setAttribute('data-grabbed', 'false');
@@ -1566,6 +1574,10 @@ const PROJECTS = [
         // Let a real click on a card still open its record.
         if (e.target.closest('.ring-index')) return;
         if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+        // Reaching for the ring is itself a request for it to turn, so a drag
+        // releases any held job rather than fighting it.
+        if (heldByIndex) clearSelection();
 
         cancelIdle();
         dragging = true;
@@ -1666,8 +1678,48 @@ const PROJECTS = [
       });
     }
 
+    const releaseBtn = document.getElementById('index-release');
+    const indexHint = document.getElementById('index-hint');
+    const HINT_FREE = 'Pick one to hold the ring and read what was done.';
+    const HINT_HELD = 'Ring held. Release it, or pick the same job again.';
+    let selectedId = null;
+
+    /* Let it go. Everything the selection changed is undone here and nowhere
+     * else, so there is exactly one way back to a turning ring. */
+    function clearSelection() {
+      selectedId = null;
+      heldByIndex = false;
+      benchTrack.querySelectorAll('.ring-card').forEach(function (c) {
+        c.classList.remove('is-hot', 'is-dim');
+        c.removeAttribute('tabindex');
+        c.style.marginLeft = '';
+      });
+      if (ringIndex) {
+        ringIndex.querySelectorAll('button').forEach(function (b) {
+          b.setAttribute('aria-pressed', 'false');
+        });
+      }
+      if (releaseBtn) releaseBtn.hidden = true;
+      if (indexHint) indexHint.textContent = HINT_FREE;
+      // An explicit Pause still outranks this: releasing a selection must not
+      // override a button the reader pressed on purpose.
+      if (canDrive && !heldByButton) {
+        cancelIdle();
+        anims.forEach(function (a) { a.play(); });
+        benchStrip.setAttribute('data-grabbed', 'false');
+      }
+      if (readoutStatus) readoutStatus.textContent = 'Ring released and turning again.';
+    }
+
     function selectJob(id, fromClick, holdRing) {
       const hold = holdRing !== false;
+      if (hold) {
+        selectedId = id;
+        heldByIndex = true;
+        cancelIdle();
+        if (releaseBtn) releaseBtn.hidden = false;
+        if (indexHint) indexHint.textContent = HINT_HELD;
+      }
       if (hold && canDrive && !heldByButton) {
         anims.forEach(function (a) { if (id) { a.pause(); } else { a.play(); } });
       }
@@ -1702,9 +1754,32 @@ const PROJECTS = [
         b.innerHTML = '<span class="ri-id">' + esc(job.id) + '</span>' +
           '<span class="ri-name">' + esc(job.title) + '</span>' +
           '<span class="ri-n">' + (n ? n + (n === 1 ? ' shot' : ' shots') : 'no photo') + '</span>';
-        b.addEventListener('click', function () { selectJob(job.id, true); });
+        b.addEventListener('click', function () {
+          // Same job twice is the natural "never mind" -- no second control
+          // to find, and it matches what a pressed button already implies.
+          if (selectedId === job.id) { clearSelection(); return; }
+          selectJob(job.id, true);
+        });
         li.appendChild(b);
         ringIndex.appendChild(li);
+      });
+    }
+
+    if (releaseBtn) {
+      releaseBtn.addEventListener('click', function () {
+        clearSelection();
+        benchStrip.focus({ preventScroll: true });
+      });
+    }
+
+    /* Escape is what people already press to get out of a held state. Scoped
+     * to the work section so it cannot fight the photo viewer's own Escape. */
+    const workSection = document.getElementById('work');
+    if (workSection) {
+      workSection.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || !heldByIndex) return;
+        e.preventDefault();
+        clearSelection();
       });
     }
 

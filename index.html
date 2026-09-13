@@ -49,7 +49,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=40">
+<link rel="stylesheet" href="css/styles.css?v=41">
 </head>
 <body>
 
@@ -160,7 +160,11 @@
            the design answer and the accessibility answer at once. -->
       <div class="index-head">
         <p class="eyebrow">Service log</p>
-        <p class="index-hint">Pick one to hold the ring and read what was done.</p>
+        <p class="index-hint" id="index-hint">Pick one to hold the ring and read what was done.</p>
+        <button type="button" class="index-release" id="index-release" hidden>
+          Release the ring
+          <span class="index-release-mark" aria-hidden="true"></span>
+        </button>
       </div>
       <ul class="ring-index" id="ring-index" aria-label="Jobs"></ul>
 
@@ -567,6 +571,6 @@
   <p class="lightbox-hint" id="lightbox-hint">Drag to move the photo when it's zoomed in. Press Escape to close.</p>
 </dialog>
 
-<script src="js/main.js?v=40" defer></script>
+<script src="js/main.js?v=41" defer></script>
 </body>
 </html>

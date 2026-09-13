@@ -1995,7 +1995,7 @@ html:not(.js) .page-boot { display: none; }
  * transform, filter and z-index, so nothing else is driving it.
  */
 .ring-card.is-dim {
-  opacity: 0.16;
+  opacity: 0.11;
   /* Faded to near-invisible, a card is decoration. It should not be swallowing
      clicks meant for the strip underneath, which is what you drag. */
   pointer-events: none;
@@ -2042,6 +2042,46 @@ html:not(.js) .page-boot { display: none; }
   text-transform: uppercase;
   color: var(--text-muted);
 }
+
+/* Anything that stops motion needs a visible way to start it again. The
+   button only exists while the ring is actually being held, so it is never
+   a control that does nothing. */
+.index-release {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 8px 15px;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: background 160ms ease, color 160ms ease;
+}
+.index-release[hidden] { display: none; }
+.index-release:hover { background: var(--accent); color: var(--on-accent); }
+.index-release:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.index-release-mark {
+  width: 11px; height: 11px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  position: relative;
+}
+.index-release-mark::before,
+.index-release-mark::after {
+  content: "";
+  position: absolute;
+  inset: 2px auto 2px 50%;
+  width: 1px;
+  background: currentColor;
+  transform: translateX(-50%) rotate(45deg);
+}
+.index-release-mark::after { transform: translateX(-50%) rotate(-45deg); }
 
 .ring-index {
   list-style: none;
