@@ -50,6 +50,36 @@ const PORTRAIT = null;
  * Rendered in Phase 3 — the data lives here from Phase 1 so there is one
  * place to edit from the start.
  */
+/* Real pixel dimensions of every image, so each one can declare its own
+ * width and height. The browser reserves exactly the right box before the
+ * file arrives (no layout shift) and the photo is shown whole instead of
+ * being cropped to a shape it was never taken in.
+ *
+ * Regenerate by reading the files — never hand-edit these numbers.
+ */
+/* Image cache version. vercel.json serves images with a one-year immutable
+ * cache, which is right for files that never change — but these did. Without
+ * this, anyone who had already visited would keep the old cropped versions
+ * until 2027. Bump it whenever a file in assets/img/ is replaced.
+ */
+const IMG_V = '?v=2';
+
+const IMAGE_DIMS = {
+  'iga-landing': [1200, 900],
+  'laptop-teardown': [1800, 1013],
+  'nvme-os-install': [1800, 1013],
+  'office-build-finished': [1342, 1800],
+  'office-build-interior': [1350, 1800],
+  'own-rig-cablemgmt': [1012, 1800],
+  'pc-cleaning-service': [1013, 1800],
+  'valheim-dust': [1800, 1350],
+  'valheim-finished': [1350, 1800],
+  'valheim-service': [1350, 1800],
+  'xeth-54c': [1350, 1800],
+  'xeth-finished': [1012, 1800],
+  'xeth-parts': [1800, 1350],
+};
+
 const PROJECTS = [
   {
     id: '01',
@@ -358,10 +388,13 @@ const PROJECTS = [
   }
 
   function pictureFor(slug, alt, eager) {
+    // Per-image dimensions. A single hardcoded 1200x900 was what forced every
+    // photo into one landscape shape; these are the real numbers.
+    const d = IMAGE_DIMS[slug] || [1200, 900];
     return '<picture>' +
-      '<source srcset="assets/img/' + slug + '.webp" type="image/webp">' +
-      '<img src="assets/img/' + slug + '.jpg" alt="' + esc(alt) + '" ' +
-      'width="1200" height="900" decoding="async" ' +
+      '<source srcset="assets/img/' + slug + '.webp' + IMG_V + '" type="image/webp">' +
+      '<img src="assets/img/' + slug + '.jpg' + IMG_V + '" alt="' + esc(alt) + '" ' +
+      'width="' + d[0] + '" height="' + d[1] + '" decoding="async" ' +
       'loading="' + (eager ? 'eager' : 'lazy') + '">' +
       '</picture>';
   }
@@ -447,20 +480,27 @@ const PROJECTS = [
     return '<li class="case reveal' + flagship + (job.secondary ? ' is-secondary' : '') + '" ' +
       'data-category="' + job.category + '"' +
       (job.secondary ? ' data-secondary="true"' : '') + stagger + '>' +
-      '<div class="case-head">' +
-        '<span class="case-id">' + esc(job.id) + '</span>' +
-        '<span class="case-tag">' + esc(cat) + '</span>' +
-        ownTag +
+      /* Three groups, so the flagship can lay the photo beside the words
+       * instead of under them. On every other card the groups are
+       * `display: contents` and the markup behaves exactly as if they were
+       * not here. */
+      '<div class="case-intro">' +
+        '<div class="case-head">' +
+          '<span class="case-id">' + esc(job.id) + '</span>' +
+          '<span class="case-tag">' + esc(cat) + '</span>' +
+          ownTag +
+        '</div>' +
+        '<h3>' + esc(job.title) + '</h3>' +
       '</div>' +
-      '<h3>' + esc(job.title) + '</h3>' +
-      media +
-      extras +
-      '<dl class="case-fields">' +
-        '<dt>Problem</dt><dd>' + esc(job.problem) + '</dd>' +
-        '<dt>What I did</dt><dd>' + esc(job.did) + '</dd>' +
-        '<dt>Result</dt><dd>' + esc(job.result) + '</dd>' +
-      '</dl>' +
-      link +
+      '<div class="case-visual">' + media + extras + '</div>' +
+      '<div class="case-detail">' +
+        '<dl class="case-fields">' +
+          '<dt>Problem</dt><dd>' + esc(job.problem) + '</dd>' +
+          '<dt>What I did</dt><dd>' + esc(job.did) + '</dd>' +
+          '<dt>Result</dt><dd>' + esc(job.result) + '</dd>' +
+        '</dl>' +
+        link +
+      '</div>' +
       '</li>';
   }
 
@@ -653,8 +693,8 @@ const PROJECTS = [
     fig.className = 'about-portrait';
     fig.innerHTML =
       '<picture>' +
-      '<source srcset="assets/img/' + PORTRAIT.image + '.webp" type="image/webp">' +
-      '<img src="assets/img/' + PORTRAIT.image + '.jpg" alt="' + esc(PORTRAIT.alt || '') + '" ' +
+      '<source srcset="assets/img/' + PORTRAIT.image + '.webp' + IMG_V + '" type="image/webp">' +
+      '<img src="assets/img/' + PORTRAIT.image + '.jpg' + IMG_V + '" alt="' + esc(PORTRAIT.alt || '') + '" ' +
       'width="1000" height="1250" loading="lazy" decoding="async">' +
       '</picture>';
     aboutGrid.appendChild(fig);
@@ -865,7 +905,7 @@ const PROJECTS = [
       opener = trigger || null;
       // WebP with no <picture> here: every browser that supports <dialog>
       // supports WebP, so there is nothing to negotiate.
-      lbImg.src = 'assets/img/' + slug + '.webp';
+      lbImg.src = 'assets/img/' + slug + '.webp' + IMG_V;
       lbImg.alt = alt || '';
       lbCaption.textContent = alt || '';
       reset();

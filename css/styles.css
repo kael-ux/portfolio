@@ -66,8 +66,12 @@
 }
 
 :root {
-  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
-  --font-body:    "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Grotesque throughout — Cael's call after comparing both side by side.
+     Space Grotesk has enough character in its lowercase g, a and the cut of
+     its numerals to read as chosen rather than as an unstyled default, which
+     is what keeps an all-grotesque page from looking like a draft. */
+  --font-display: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:    "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono:    ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Spacious scale */
@@ -81,7 +85,7 @@
   --space-3xl: 96px;
 
   --radius:    10px;
-  --measure:   68ch;
+  --measure:   66ch;   /* Archivo runs wider than Public Sans at the same size */
   --wrap:      1120px;
   --header-h:  76px;
 
@@ -542,13 +546,22 @@ img { max-width: 100%; height: auto; display: block; }
   border: 1px solid var(--border);
   margin-bottom: var(--space-sm);
 }
-.case-media img { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+/* No forced ratio and no cover. Cael's photos are mostly portrait (3:4 and
+   9:16) or widescreen (16:9); squeezing all of them into one landscape box
+   cropped away more than half of some frames, which read on screen as the
+   photo being zoomed in. Each image now carries its own width and height
+   attributes, so the browser reserves the right space and the whole frame
+   is shown. */
+.case-media img { display: block; width: 100%; height: auto; }
 
 /* Bento: the flagship job takes the full row. It has the only hard number on
    the site, so it gets the space rather than sitting in a uniform grid. */
 .case.is-flagship { grid-column: 1 / -1; }
 .case.is-flagship h3 { font-size: 1.55rem; }
-.case.is-flagship .case-media img { aspect-ratio: 21 / 9; }
+/* The flagship spans the full row, and a portrait photo at that width would
+   be over 1400px tall. Cap the media, not the picture — the image keeps its
+   own proportions inside it. */
+.case.is-flagship .case-media { max-width: 560px; }
 
 @media (min-width: 861px) {
   /* Three columns, each holding one label above its own value.
@@ -1526,4 +1539,72 @@ img { max-width: 100%; height: auto; display: block; }
   .media-btn:active,
   .lb-btn:active { transform: none; }
   .case:hover { box-shadow: none; transform: none; }
+}
+
+
+/* =========================================================================
+ * Tracking
+ *
+ * Size-specific, never one value everywhere. Large text reads too loose as
+ * it grows, so the display tightens; body stays at zero because tightening
+ * it would cost legibility for exactly the older, non-technical visitors
+ * this site is built for. A single letter-spacing value is always wrong
+ * somewhere.
+ * ========================================================================= */
+
+.display,
+h1 { letter-spacing: -0.035em; line-height: 1.02; font-weight: 600; }
+h2 { letter-spacing: -0.025em; line-height: 1.1;  font-weight: 600; }
+h3 { letter-spacing: -0.012em; font-weight: 600; }
+.wordmark { letter-spacing: -0.02em; font-weight: 700; }
+
+body, p, .lede, dd { letter-spacing: 0; }
+
+/* =========================================================================
+ * Flagship layout — photo beside the words
+ *
+ * Cael's photos are mostly portrait. Full width with a portrait photo above
+ * the text left roughly 500x740px of nothing beside the image — the same
+ * defect as the old services bento, and the same rule applies: a cell has to
+ * earn its width with content.
+ *
+ * So the flagship splits. The three groups are `display: contents` on every
+ * other card, which means the markup behaves exactly as before everywhere
+ * else; only here do they become real boxes.
+ * ========================================================================= */
+
+.case-intro,
+.case-visual,
+.case-detail { display: contents; }
+
+@media (min-width: 861px) {
+  .case.is-flagship {
+    display: grid;
+    grid-template-columns: minmax(0, 470px) minmax(0, 1fr);
+    /* Row 1 hugs the title; row 2 takes what is left. Without this the two
+       rows split the picture's height evenly and drop a void between the
+       heading and the first field. */
+    grid-template-rows: min-content 1fr;
+    column-gap: var(--space-xl);
+    row-gap: var(--space-sm);
+    align-items: start;
+  }
+
+  .case.is-flagship > .case-intro,
+  .case.is-flagship > .case-detail { display: block; grid-column: 2; }
+  .case.is-flagship > .case-visual { display: block; grid-column: 1; grid-row: 1 / span 2; }
+
+  .case.is-flagship > .case-intro  { grid-row: 1; }
+  .case.is-flagship > .case-detail { grid-row: 2; }
+
+  /* The media cap is the column now, so the picture fills its side. */
+  .case.is-flagship .case-media { max-width: none; }
+
+  /* Two columns of fields, not three: the text column is half the card, and
+     three columns of body copy in that space gives a ~14-character measure. */
+  .case.is-flagship .case-fields {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
 }
