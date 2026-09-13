@@ -152,6 +152,19 @@ const PROJECTS = [
     id: '08',
     category: 'web',
     status: 'live',
+    title: 'A kendo club with 31,000 views and nowhere to send them',
+    problem: 'IGA Kendo Club pulled 31,210 views in 28 days on social and got 2 link clicks out of it. Not a content problem — there was nothing to click. Their bio pointed at nothing, so every interested beginner hit a dead end.',
+    did: 'Designed and built them a landing page. Their real brand blue sampled straight from their own kamon file rather than guessed, the founder\'s actual history, the full instructor roster, their own photos, and their real member testimonials. Venues and schedules pulled from their federation page and checked. No fee is stated anywhere on it, because the club publishes none and I was not going to invent one.',
+    result: 'Built and ready to hand over. It is concept work until the club approves it — their page, their call, so nothing goes live on my say-so. The number it exists to move is that 2.',
+    image: 'iga-landing',
+    alt: 'The IGA Kendo Club landing page: a deep navy hero reading "Enjoy Kendo!" over the club kamon, with the club name and navigation above it.',
+    link: { href: 'work/iga-kendo/', label: 'Open the live design', internal: true },
+    extras: []
+  },
+  {
+    id: '09',
+    category: 'web',
+    status: 'live',
     title: 'This site — designed, built and shipped',
     problem: 'I was offering web work with nothing to show for it. This slot said "coming soon", which is a bad look on the page that is supposed to prove you can do the job.',
     did: 'Designed and built it from scratch — plain HTML, CSS and JavaScript. No framework, no build step, no dependencies. Two themes, AAA contrast on every line of body text, keyboard navigable throughout, and it still works with JavaScript switched off. Deployed on Vercel with security headers and year-long image caching.',
@@ -163,7 +176,7 @@ const PROJECTS = [
     extras: []
   },
   {
-    id: '09',
+    id: '10',
     category: 'video',
     status: 'soon',
     title: 'Video edit',
@@ -404,10 +417,18 @@ const PROJECTS = [
         '</div></div>';
     }
 
-    const link = job.link
-      ? '<a class="case-link" href="' + job.link.href + '" target="_blank" rel="noopener">' +
-        esc(job.link.label) + '<span class="case-link-arrow" aria-hidden="true"></span></a>'
-      : '';
+    /* Outbound links open in a new tab. Internal ones (a case study hosted on
+     * this site) stay in the same tab — a new tab cannot carry a page
+     * transition, and sending someone away from the portfolio to look at the
+     * portfolio's own work is the wrong model. */
+    let link = '';
+    if (job.link) {
+      const internal = job.link.internal === true;
+      link = '<a class="case-link' + (internal ? ' case-link-internal' : '') + '" ' +
+        'href="' + job.link.href + '"' +
+        (internal ? ' data-immersive' : ' target="_blank" rel="noopener"') + '>' +
+        esc(job.link.label) + '<span class="case-link-arrow" aria-hidden="true"></span></a>';
+    }
 
     // Own machines are labelled as such. An inflated claim a visitor catches
     // costs the credibility of every other entry on the page.
@@ -916,6 +937,67 @@ const PROJECTS = [
       });
     }
   }
+
+  /* ---- Immersive navigation to a hosted case study --------------------
+   *
+   * Browsers that support cross-document View Transitions handle this on
+   * their own — the CSS declares it and nothing here needs to run. This is
+   * the fallback for everyone else: fade a curtain in, then navigate.
+   *
+   * Three ways out, because only one of them is guaranteed:
+   *   - the navigation happens and the page is replaced
+   *   - a hard timeout clears the class if it somehow doesn't
+   *   - pageshow clears it when someone comes back via the back button,
+   *     where the page is restored from cache with its classes intact
+   *
+   * That last one is not optional. Without it, hitting back lands you on a
+   * portfolio permanently dimmed behind a curtain that never lifts.
+   */
+
+  function clearLeaving() { root.classList.remove('is-leaving'); }
+  window.addEventListener('pageshow', clearLeaving);
+
+  // Feature-detected, not sniffed — and wrapped, because CSS.supports throws
+  // on a selector() query it cannot parse in some older engines.
+  let supportsViewTransitions = false;
+  try {
+    supportsViewTransitions =
+      typeof document.startViewTransition === 'function' &&
+      window.CSS && typeof CSS.supports === 'function' &&
+      CSS.supports('selector(:active-view-transition)');
+  } catch (e) {
+    supportsViewTransitions = false;
+  }
+
+  document.addEventListener('click', function (event) {
+    const trigger = event.target.closest('a[data-immersive]');
+    if (!trigger) return;
+
+    // Never hijack a deliberate new-tab / new-window / download click.
+    if (event.defaultPrevented || event.button !== 0) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (trigger.target && trigger.target !== '_self') return;
+
+    // The browser is doing it properly — stay out of the way.
+    if (supportsViewTransitions) return;
+    if (reduceMotion.matches) return;
+
+    event.preventDefault();
+    root.classList.add('is-leaving');
+
+    const href = trigger.href;
+    let gone = false;
+    function go() {
+      if (gone) return;
+      gone = true;
+      window.location.href = href;
+    }
+
+    // Navigate after the curtain, but never later than this — a missed
+    // animation event must not cost someone the click they made.
+    window.setTimeout(go, 260);
+    window.setTimeout(clearLeaving, 2000);
+  });
 
   /* ---- Footer year ---------------------------------------------------- */
 
