@@ -459,7 +459,12 @@ const PROJECTS = [
     const stagger = ' style="--stagger:' + delay + 'ms"';
 
     if (job.status === 'soon') {
-      return '<li class="case case-soon reveal" data-category="' + job.category + '"' + stagger + '>' +
+      // Same id and secondary flag as a live record, so the disclosure and the
+      // bench can reach it. Without these it could never be hidden.
+      return '<li class="case case-soon reveal' + (job.secondary ? ' is-secondary' : '') + '" ' +
+        'id="job-' + job.id + '" ' +
+        'data-category="' + job.category + '"' +
+        (job.secondary ? ' data-secondary="true"' : '') + stagger + '>' +
         '<div class="case-head">' +
           '<span class="case-id">' + esc(job.id) + '</span>' +
           '<span class="case-tag">' + esc(cat) + '</span>' +
@@ -1282,9 +1287,26 @@ const PROJECTS = [
   const benchTrack = document.getElementById('bench-track');
   const benchStrip = document.getElementById('bench-strip');
   const benchPause = document.getElementById('bench-pause');
+  const dotField   = document.getElementById('dot-field');
+  const ringIndex  = document.getElementById('ring-index');
 
   if (benchTrack) {
-    // Flatten every job into one photo list, keeping the job it belongs to.
+    /* The ground. Static by design, and a few dots lit so the grid reads as
+     * a readout rather than wallpaper. */
+    if (dotField) {
+      for (let i = 0; i < 300; i++) {
+        const d = document.createElement('i');
+        if (i % 19 === 5 || i % 31 === 13) d.className = 'lit';
+        dotField.appendChild(d);
+      }
+    }
+
+    /* Every photograph from every job, on one ellipse. Built from PROJECTS,
+     * so adding a job adds its pictures here automatically.
+     *
+     * No duplicate set this time: the ring loops through its own keyframe, so
+     * unlike a marquee there is no seam to hide and nothing is announced to a
+     * screen reader twice. */
     const shots = [];
     ORDERED.forEach(function (job) {
       if (job.image) shots.push({ slug: job.image, alt: job.alt, job: job });
@@ -1293,32 +1315,76 @@ const PROJECTS = [
       });
     });
 
-    function layDown(duplicate) {
-      shots.forEach(function (shot) {
-        const a = document.createElement('a');
-        a.className = 'bench-card';
-        a.href = '#job-' + shot.job.id;
-        a.setAttribute('role', 'listitem');
-        a.innerHTML =
-          pictureFor(shot.slug, duplicate ? '' : shot.alt, false) +
-          '<p class="bc-title">' + esc(CATEGORY_LABEL[shot.job.category] || shot.job.category) + '</p>' +
-          '<p class="bc-sub">Job ' + esc(shot.job.id) + '</p>';
-        if (duplicate) {
-          a.setAttribute('aria-hidden', 'true');
-          a.setAttribute('tabindex', '-1');
-        }
-        benchTrack.appendChild(a);
+    const CYCLE = 34;
+    shots.forEach(function (shot, i) {
+      const a = document.createElement('a');
+      a.className = 'ring-card';
+      a.href = '#job-' + shot.job.id;
+      a.dataset.job = shot.job.id;
+      // Each card enters the same ride offset by its share of the cycle, so
+      // they sit evenly around the ellipse at any instant.
+      a.style.setProperty('--ring-dur', CYCLE + 's');
+      a.style.setProperty('--ring-delay', (-(CYCLE / shots.length) * i).toFixed(2) + 's');
+      a.innerHTML =
+        pictureFor(shot.slug, shot.alt, false) +
+        '<p class="rc-title">' + esc(CATEGORY_LABEL[shot.job.category] || shot.job.category) + '</p>' +
+        '<p class="rc-job">Job ' + esc(shot.job.id) + '</p>';
+      benchTrack.appendChild(a);
+    });
+
+    /* The index. A turning ring cannot be tabbed through, so the list is both
+     * the way in and the only keyboard path to it. Naming a job lifts its
+     * photographs out of the ring and dims the rest. */
+    if (ringIndex) {
+      const seen = [];
+      shots.forEach(function (sh) {
+        if (seen.indexOf(sh.job.id) === -1) seen.push(sh.job.id);
+      });
+
+      let active = null;
+      function highlight(id) {
+        active = id;
+        const hot = [];
+        benchTrack.querySelectorAll('.ring-card').forEach(function (c) {
+          const hit = id && c.dataset.job === id;
+          c.classList.toggle('is-hot', !!hit);
+          c.classList.toggle('is-dim', !!id && !hit);
+          if (hit) hot.push(c);
+          if (!id) c.style.marginLeft = '';
+        });
+        // Held cards would stack on the same spot, so fan them out.
+        hot.forEach(function (c, n) {
+          c.style.marginLeft = (-92 + (n - (hot.length - 1) / 2) * 208) + 'px';
+        });
+        ringIndex.querySelectorAll('button').forEach(function (b) {
+          b.setAttribute('aria-pressed', String(b.dataset.job === id));
+        });
+      }
+
+      seen.forEach(function (id) {
+        const count = shots.filter(function (sh) { return sh.job.id === id; }).length;
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.dataset.job = id;
+        b.setAttribute('aria-pressed', 'false');
+        b.textContent = 'Job ' + id + ' — ' + count + (count === 1 ? ' shot' : ' shots');
+        b.addEventListener('mouseenter', function () { highlight(id); });
+        b.addEventListener('focus', function () { highlight(id); });
+        b.addEventListener('mouseleave', function () { if (active === id) highlight(null); });
+        b.addEventListener('blur', function () { if (active === id) highlight(null); });
+        // A click commits to the record itself, which is where the writing is.
+        b.addEventListener('click', function () { window.location.hash = '#job-' + id; });
+        li.appendChild(b);
+        ringIndex.appendChild(li);
       });
     }
-    layDown(false);
-    layDown(true);
 
-    /* Motion that starts on its own and runs past a few seconds needs a real
-     * way to stop it. Hovering and focusing both pause the drift, but neither
-     * of those exists on a touchscreen, so there is a button. */
+    /* Motion that starts on its own needs a real stop. Hover and focus both
+     * pause the ring, but neither of those exists on a touchscreen. */
     if (benchPause) {
       if (reduceMotion.matches) {
-        benchPause.hidden = true;                 // nothing is moving to pause
+        benchPause.hidden = true;
       } else {
         benchPause.addEventListener('click', function () {
           const paused = benchStrip.getAttribute('data-paused') === 'true';
@@ -1329,7 +1395,7 @@ const PROJECTS = [
       }
     }
 
-    /* A bench card points at a written record. Mark the target so the jump
+    /* A ring card points at a written record. Mark the target so the jump
      * from a photograph to its story is never ambiguous. */
     function markJob() {
       grid.querySelectorAll('.case.is-target').forEach(function (el) {
@@ -1337,9 +1403,8 @@ const PROJECTS = [
       });
       const hash = window.location.hash;
       if (!hash || hash.length < 2) return;
-      const target = grid.querySelector(hash.replace('#job-', '#job-'));
+      const target = grid.querySelector(hash);
       if (target) {
-        // A record hidden behind the disclosure has to come back first.
         if (target.hidden && target.dataset.secondary === 'true') {
           showSecondary = true;
           updateWork(true);

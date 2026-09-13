@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=28">
+<link rel="stylesheet" href="css/styles.css?v=32">
 </head>
 <body>
 
@@ -171,7 +171,9 @@
       <button type="button" class="bench-ctl" id="bench-pause" aria-pressed="false">Pause</button>
     </div>
     <div class="bench-strip" id="bench-strip">
-      <div class="bench-track" id="bench-track" role="list" aria-labelledby="bench-title"></div>
+      <div class="dot-field" id="dot-field" aria-hidden="true"></div>
+      <div class="ring" id="bench-track"></div>
+      <ul class="ring-index" id="ring-index" aria-label="Jump to a job"></ul>
     </div>
 
     <div class="wrap">
@@ -491,6 +493,6 @@
   <p class="lightbox-hint" id="lightbox-hint">Drag to move the photo when it's zoomed in. Press Escape to close.</p>
 </dialog>
 
-<script src="js/main.js?v=28" defer></script>
+<script src="js/main.js?v=32" defer></script>
 </body>
 </html>
