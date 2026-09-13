@@ -116,6 +116,7 @@ const PROJECTS = [
     id: '03',
     category: 'tech',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the one that leads
     title: 'Office desktop on a tight budget',
     problem: 'A client needed a desktop for office work and had a tight budget to do it in.',
     did: 'Mixed second-hand and brand-new parts to bring the cost down — used where it was safe to, new where it mattered. Built around a Gigabyte GA-H110M-HD2 with an Intel CPU on the stock cooler, DDR4, a Lexar NS100 SSD and an Inplay 550W 80+ Bronze supply.',
@@ -177,6 +178,7 @@ const PROJECTS = [
     id: '02',
     category: 'tech',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the one that leads
     title: 'Stuttering in Valheim, and 60–70°C sitting idle',
     problem: 'A friend\'s gaming PC was stuttering hard in Valheim. It was also sitting at 60–70°C just idling — before any game was even loaded, which is where the real problem showed.',
     did: 'Full strip and clean: dust out of the case, the filters and every fan. Then pulled the CPU cooler, cleaned off the dried-out thermal paste and repasted it.',
@@ -193,6 +195,7 @@ const PROJECTS = [
     id: '08',
     category: 'web',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the one that leads
     title: 'Landing pages that turn followers into enquiries',
     problem: 'A lot of businesses have an audience and no way to convert it. The posts get seen, people get interested, and then there is nowhere for them to go. IGA Kendo Club had exactly that — thousands of views a month and a bio link pointing at nothing, so every interested beginner hit a dead end.',
     did: 'This is what I build as a web developer: one page whose whole job is turning attention into enquiries. For IGA that meant their real brand colour sampled from their own logo file, the founder\'s history, the full instructor roster, their own photos and their real member testimonials — laid out so a first-time visitor knows within seconds what it is, where it happens, and how to start.',
@@ -210,6 +213,7 @@ const PROJECTS = [
     id: '09',
     category: 'web',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the one that leads
     title: 'This site — designed, built and shipped',
     problem: 'I was offering web work with nothing to show for it. This slot said "coming soon", which is a bad look on the page that is supposed to prove you can do the job.',
     did: 'Designed and built it from scratch — plain HTML, CSS and JavaScript. No framework, no build step, no dependencies. Two themes, AAA contrast on every line of body text, keyboard navigable throughout, and it still works with JavaScript switched off. Deployed on Vercel with security headers and year-long image caching.',
@@ -225,6 +229,7 @@ const PROJECTS = [
     id: '10',
     category: 'video',
     status: 'soon',
+    secondary: true,   // behind "more work" — real, just not the one that leads
     title: 'Video edit',
     problem: null, did: null, result: null,
     image: null, alt: null, extras: []
@@ -617,9 +622,11 @@ const PROJECTS = [
       moreBtn.setAttribute('aria-expanded', String(showSecondary));
       const label = moreBtn.querySelector('.work-more-label');
       if (label) {
+        // The hidden set is no longer tech-only, so the label counts what is
+        // actually behind the disclosure under the current filter.
         label.textContent = showSecondary
           ? 'Show fewer'
-          : 'Show ' + hiddenByDisclosure + ' more tech support job' + (hiddenByDisclosure === 1 ? '' : 's');
+          : 'Show ' + hiddenByDisclosure + ' more job' + (hiddenByDisclosure === 1 ? '' : 's');
       }
     }
 
