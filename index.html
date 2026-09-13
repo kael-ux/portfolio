@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=32">
+<link rel="stylesheet" href="css/styles.css?v=33">
 </head>
 <body>
 
@@ -167,10 +167,10 @@
     <!-- The bench. Every photograph from every job, passing across a lit
          surface. Clicking one jumps to that job's written record below. -->
     <div class="wrap bench-head">
-      <p class="bench-title" id="bench-title">The bench &mdash; every photograph, from every job</p>
+      <p class="bench-title" id="bench-title">The bench &mdash; drag to turn it</p>
       <button type="button" class="bench-ctl" id="bench-pause" aria-pressed="false">Pause</button>
     </div>
-    <div class="bench-strip" id="bench-strip">
+    <div class="bench-strip" id="bench-strip" tabindex="0" role="group" aria-label="Photograph ring &mdash; drag to turn, or use the arrow keys">
       <div class="dot-field" id="dot-field" aria-hidden="true"></div>
       <div class="ring" id="bench-track"></div>
       <ul class="ring-index" id="ring-index" aria-label="Jump to a job"></ul>
@@ -493,6 +493,6 @@
   <p class="lightbox-hint" id="lightbox-hint">Drag to move the photo when it's zoomed in. Press Escape to close.</p>
 </dialog>
 
-<script src="js/main.js?v=32" defer></script>
+<script src="js/main.js?v=33" defer></script>
 </body>
 </html>

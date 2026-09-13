@@ -1316,6 +1316,7 @@ const PROJECTS = [
     });
 
     const CYCLE = 34;
+    const cards = [];
     shots.forEach(function (shot, i) {
       const a = document.createElement('a');
       a.className = 'ring-card';
@@ -1330,7 +1331,127 @@ const PROJECTS = [
         '<p class="rc-title">' + esc(CATEGORY_LABEL[shot.job.category] || shot.job.category) + '</p>' +
         '<p class="rc-job">Job ' + esc(shot.job.id) + '</p>';
       benchTrack.appendChild(a);
+      cards.push(a);
     });
+
+    /* ---- Grab the ring and turn it -------------------------------------
+     *
+     * The CSS keyframe is the shape of the path. To let a mouse drive it,
+     * the same keyframe is handed to the Web Animations API, which gives
+     * back an object whose `currentTime` can be written to directly. That is
+     * the scrub handle: dragging sets the time, releasing leaves it where it
+     * is, and after a few idle seconds it starts turning again on its own.
+     *
+     * If the browser has no WAAPI, none of this runs and the CSS animation
+     * stays exactly as it was — the ring still turns, it just cannot be
+     * grabbed. Nothing depends on this working.
+     */
+    const RING_KEYFRAMES = [
+      { offset: 0,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.62)', zIndex: 3 },
+      { offset: 0.25, transform: 'translateX(0px) translateY(68px) scale(1.1) rotate(0deg) skewY(0deg)',        filter: 'brightness(1)',   zIndex: 9 },
+      { offset: 0.5,  transform: 'translateX(330px) translateY(30px) scale(.78) rotate(3deg) skewY(-1.6deg)',   filter: 'brightness(.62)', zIndex: 3 },
+      { offset: 0.75, transform: 'translateX(0px) translateY(-54px) scale(.48) rotate(0deg) skewY(0deg)',       filter: 'brightness(.46)', zIndex: 1 },
+      { offset: 1,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.62)', zIndex: 3 }
+    ];
+    const CYCLE_MS = CYCLE * 1000;
+    const DRAG_FULL_TURN = 900;   // px of drag that equals one revolution
+    const IDLE_BEFORE_RESUME = 2600;
+
+    const canDrive = typeof Element.prototype.animate === 'function' && !reduceMotion.matches;
+    let anims = [];
+    let heldByButton = false;
+
+    if (canDrive) {
+      anims = cards.map(function (card, i) {
+        card.style.animation = 'none';          // hand the path to script
+        return card.animate(RING_KEYFRAMES, {
+          duration: CYCLE_MS,
+          iterations: Infinity,
+          easing: 'linear',
+          delay: -(CYCLE_MS / cards.length) * i
+        });
+      });
+    }
+
+    let idleTimer = null;
+    function cancelIdle() { if (idleTimer) { window.clearTimeout(idleTimer); idleTimer = null; } }
+    function resumeSoon() {
+      cancelIdle();
+      if (heldByButton) return;                 // an explicit Pause outranks idling
+      idleTimer = window.setTimeout(function () {
+        anims.forEach(function (a) { a.play(); });
+        benchStrip.setAttribute('data-grabbed', 'false');
+      }, IDLE_BEFORE_RESUME);
+    }
+
+    if (canDrive) {
+      let dragging = false, startX = 0, base = [], lastX = 0, lastT = 0, vx = 0;
+
+      benchStrip.addEventListener('pointerdown', function (e) {
+        // Let a real click on a card still open its record.
+        if (e.target.closest('.ring-index')) return;
+        if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+        cancelIdle();
+        dragging = true;
+        startX = lastX = e.clientX;
+        lastT = Date.now();
+        vx = 0;
+        base = anims.map(function (a) { a.pause(); return a.currentTime || 0; });
+        benchStrip.setAttribute('data-grabbed', 'true');
+        benchStrip.setPointerCapture(e.pointerId);
+      });
+
+      benchStrip.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        const now = Date.now(), dt = now - lastT;
+        if (dt > 0) {
+          vx = 0.7 * ((e.clientX - lastX) / dt * 1000) + 0.3 * vx;
+          lastX = e.clientX; lastT = now;
+        }
+        const shift = ((e.clientX - startX) / DRAG_FULL_TURN) * CYCLE_MS;
+        anims.forEach(function (a, i) { a.currentTime = base[i] - shift; });
+        e.preventDefault();
+      });
+
+      function release(e) {
+        if (!dragging) return;
+        dragging = false;
+        if (e && e.pointerId != null && benchStrip.hasPointerCapture(e.pointerId)) {
+          benchStrip.releasePointerCapture(e.pointerId);
+        }
+        // A flick keeps going for a moment, then everything settles and the
+        // idle clock starts. Stepped with setTimeout rather than rAF, which
+        // does not fire in every context.
+        const glide = Math.max(-1400, Math.min(1400, vx));
+        let step = 0;
+        (function coast() {
+          if (dragging) return;                 // grabbed again mid-glide
+          const decay = Math.pow(0.82, step);
+          if (Math.abs(glide * decay) > 30 && step < 26) {
+            const shift = ((glide * decay) / DRAG_FULL_TURN) * CYCLE_MS * 0.05;
+            anims.forEach(function (a) { a.currentTime = (a.currentTime || 0) - shift; });
+            step++;
+            window.setTimeout(coast, 24);
+          } else {
+            resumeSoon();
+          }
+        })();
+      }
+      benchStrip.addEventListener('pointerup', release);
+      benchStrip.addEventListener('pointercancel', release);
+
+      // Arrow keys nudge the ring for anyone not using a pointer.
+      benchStrip.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        cancelIdle();
+        const dir = e.key === 'ArrowLeft' ? 1 : -1;
+        anims.forEach(function (a) { a.pause(); a.currentTime = (a.currentTime || 0) + dir * CYCLE_MS / 24; });
+        benchStrip.setAttribute('data-grabbed', 'true');
+        resumeSoon();
+      });
+    }
 
     /* The index. A turning ring cannot be tabbed through, so the list is both
      * the way in and the only keyboard path to it. Naming a job lifts its
@@ -1344,6 +1465,10 @@ const PROJECTS = [
       let active = null;
       function highlight(id) {
         active = id;
+        // The ring is script-driven now, so holding it is an explicit call.
+        if (canDrive && !heldByButton) {
+          anims.forEach(function (a) { if (id) { a.pause(); } else { a.play(); } });
+        }
         const hot = [];
         benchTrack.querySelectorAll('.ring-card').forEach(function (c) {
           const hit = id && c.dataset.job === id;
@@ -1391,6 +1516,14 @@ const PROJECTS = [
           benchStrip.setAttribute('data-paused', String(!paused));
           benchPause.textContent = paused ? 'Pause' : 'Resume';
           benchPause.setAttribute('aria-pressed', String(!paused));
+
+          // An explicit Pause outranks the idle clock: the ring stays stopped
+          // until it is asked to start again, however long anyone waits.
+          heldByButton = !paused;
+          cancelIdle();
+          if (canDrive) {
+            anims.forEach(function (a) { if (heldByButton) { a.pause(); } else { a.play(); } });
+          }
         });
       }
     }
