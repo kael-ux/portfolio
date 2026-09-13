@@ -39,7 +39,11 @@
   --border:        #242A2C;
   --border-strong: #394143;   /* 3:1 against --surface — real boundaries */
   --text:          #E9E7E3;   /* 15.6:1 on --bg — AAA */
-  --text-muted:    #9AA09E;   /*  7.4:1 on --bg — AAA */
+  /* Lit ground, not flat ground. The key light behind the hero raises the
+     background under the type, which costs contrast — measured off the
+     rendered pixels, #9AA09E fell to 6.5:1 there. This clears 7:1 at the
+     brightest point of the beam as well as on plain --bg. */
+  --text-muted:    #A6ACAA;   /*  8.1:1 on --bg, 7.1:1 under the beam — AAA */
   /* Steel blue is the only hue with a job, and its job is "this is a
      control". Hot and cool below belong to temperature alone. */
   --accent:        #9FD0E4;   /* the key light. 11.3:1 on --bg — AAA */
@@ -336,7 +340,53 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ---------- 5b. Hero ----------------------------------------------------- */
 
-.hero { padding-block: var(--space-3xl) var(--space-2xl); }
+/* The opening shot is lit by the same lamp as the ring — one source, above
+   and behind, with a warm bounce underneath it. Full-bleed and behind the
+   type, so the page opens in the room rather than arriving at it later. */
+.hero {
+  position: relative;
+  padding-block: var(--space-3xl) var(--space-2xl);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--header-h) * -1) 0 -18% 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(96% 76% at 50% -14%,
+      rgba(159, 208, 228, 0.16) 0%,
+      rgba(159, 208, 228, 0.05) 42%,
+      transparent 72%),
+    radial-gradient(64% 46% at 18% 108%,
+      rgba(232, 160, 126, 0.07) 0%,
+      transparent 62%);
+}
+/* Daylight has no dark room to light, so the lamp is switched off rather
+   than inverted into a grey wash. */
+:root[data-theme="light"] .hero::before { display: none; }
+
+/* The corner data from the ring, brought to the first screen: what he is
+   open for on the left, the real hour in Manila on the right. */
+.hero-rail {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--border);
+}
+.hero-rail .eyebrow { margin: 0; }
+.hero-clock {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
 .hero .display { margin-bottom: var(--space-md); }
 
@@ -1788,24 +1838,25 @@ body, p, .lede, dd { letter-spacing: 0; }
  * that never runs has cost this project three times — a curtain that can
  * only be animated away is a curtain that can strand the reader behind it.
  * ========================================================================= */
-.bench-boot {
-  position: absolute;
+.page-boot {
+  position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 200;
   display: grid;
   place-items: center;
   background: var(--bench);
   padding: var(--space-md);
   transition: opacity 620ms ease, visibility 620ms;
 }
-.bench-boot[data-done="true"] { opacity: 0; visibility: hidden; pointer-events: none; }
-.bench-boot[data-gone="true"] { display: none !important; }
-/* Without script the curtain never appears at all, so the ring is simply
-   there. Nothing on this page waits for JavaScript to become visible. */
-html:not(.js) .bench-boot { display: none; }
+.page-boot[data-done="true"] { opacity: 0; visibility: hidden; pointer-events: none; }
+.page-boot[data-gone="true"] { display: none !important; }
+/* Without script the curtain never appears at all. Nothing on this page waits
+   for JavaScript to become visible. */
+html:not(.js) .page-boot { display: none; }
+@media (prefers-reduced-motion: reduce) { .page-boot { display: none; } }
 
-.bench-boot-in { width: min(560px, 90%); text-align: center; }
-.bench-pct {
+.page-boot-in { width: min(600px, 90%); text-align: center; }
+.boot-pct {
   margin: 0 0 var(--space-xs);
   font-family: var(--font-mono);
   font-size: 0.66rem;
@@ -1814,19 +1865,19 @@ html:not(.js) .bench-boot { display: none; }
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
-.bench-track {
+.boot-track {
   height: 2px;
   background: var(--border);
   position: relative;
   overflow: hidden;
 }
-.bench-fill {
+.boot-fill {
   position: absolute;
   inset: 0 auto 0 0;
   width: 0;
   background: var(--accent);
 }
-.bench-manifesto {
+.boot-manifesto {
   margin: var(--space-md) auto 0;
   max-width: 52ch;
   font-family: var(--font-mono);

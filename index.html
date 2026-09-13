@@ -49,9 +49,25 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="css/styles.css?v=36">
+<link rel="stylesheet" href="css/styles.css?v=38">
 </head>
 <body>
+
+<!-- The way in. Counts itself up, then lifts off the whole page. It is only
+     ever added by script and it removes itself on an unconditional timer, so
+     with JavaScript off, or if anything at all goes wrong, the page is simply
+     there. -->
+<div class="page-boot" id="bench-boot">
+  <div class="page-boot-in">
+    <p class="boot-pct" id="bench-pct">Loading 0%</p>
+    <div class="boot-track"><div class="boot-fill" id="bench-fill"></div></div>
+    <p class="boot-manifesto">
+      I fix the machine and I build the page it runs. Every reading on this
+      site was taken off the hardware itself. Nothing here is a stock photo
+      and nothing here is a round number.
+    </p>
+  </div>
+</div>
 
 <a class="skip-link" href="#main">Skip to content</a>
 
@@ -83,7 +99,10 @@
 
   <section class="hero" id="top">
     <div class="wrap">
-      <p class="eyebrow">Available for work</p>
+      <div class="hero-rail">
+        <p class="eyebrow">Available for work</p>
+        <p class="hero-clock" aria-hidden="true">Manila <span class="bench-clock" id="hero-clock">--:--:--</span></p>
+      </div>
 
       <h1 class="display">
         I fix computers.<br>
@@ -207,17 +226,6 @@
         <span class="bc-bl" id="bench-count"></span>
       </div>
 
-      <div class="bench-boot" id="bench-boot">
-        <div class="bench-boot-in">
-          <p class="bench-pct" id="bench-pct">Loading 0%</p>
-          <div class="bench-track"><div class="bench-fill" id="bench-fill"></div></div>
-          <p class="bench-manifesto">
-            I fix the machine and I build the page it runs. Every reading on this
-            site was taken off the hardware itself. Nothing here is a stock photo
-            and nothing here is a round number.
-          </p>
-        </div>
-      </div>
     </div>
 
     <div class="wrap">

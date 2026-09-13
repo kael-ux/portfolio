@@ -270,6 +270,74 @@ const PROJECTS = [
     });
   }
 
+  /* ---- The clocks -----------------------------------------------------
+   *
+   * Real local time in Manila, read off the reader's own machine. Shared by
+   * the first screen and the ring's corner data. If the browser carries no
+   * time-zone data the clock is emptied rather than showing a wrong hour —
+   * a wrong number on this site would be worse than no number.
+   */
+
+  const clocks = [].slice.call(document.querySelectorAll('.bench-clock'));
+  if (clocks.length) {
+    const tick = function () {
+      let stamp;
+      try {
+        stamp = new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Asia/Manila',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        }).format(new Date());
+      } catch (e) {
+        clocks.forEach(function (c) { c.textContent = ''; });
+        return;
+      }
+      clocks.forEach(function (c) { c.textContent = stamp; });
+      window.setTimeout(tick, 1000);
+    };
+    tick();
+  }
+
+  /* ---- The way in ------------------------------------------------------
+   *
+   * It counts, then lifts off the whole page.
+   *
+   * Two switches, deliberately. `data-done` fades it; `data-gone` takes it
+   * out of the document outright on a timer that fires no matter what else
+   * happens. A curtain that can only be animated away is a curtain that can
+   * strand the reader behind it, and the failure that has actually happened
+   * in this project three times is the animation not running at all.
+   *
+   * This runs at the top of the file, outside every other feature, so that
+   * nothing further down can fail and leave it up.
+   */
+
+  const pageBoot = document.getElementById('bench-boot');
+  if (pageBoot) {
+    const bootPct = document.getElementById('bench-pct');
+    const bootFill = document.getElementById('bench-fill');
+
+    const dropCurtain = function () {
+      pageBoot.setAttribute('data-done', 'true');
+      window.setTimeout(function () { pageBoot.setAttribute('data-gone', 'true'); }, 700);
+    };
+    window.setTimeout(function () { pageBoot.setAttribute('data-gone', 'true'); }, 4200);
+
+    if (reduceMotion.matches) {
+      dropCurtain();
+    } else {
+      let pct = 0;
+      const count = function () {
+        pct = Math.min(100, pct + 3 + Math.random() * 9);
+        if (bootPct) bootPct.textContent = 'Loading ' + Math.round(pct) + '%';
+        if (bootFill) bootFill.style.width = pct + '%';
+        if (pct < 100) window.setTimeout(count, 55);
+        else window.setTimeout(dropCurtain, 380);
+      };
+      count();
+      window.setTimeout(dropCurtain, 3200);
+    }
+  }
+
   /* ---- Header compression -------------------------------------------- */
 
   const header = document.getElementById('site-header');
@@ -1290,7 +1358,6 @@ const PROJECTS = [
   const dotField   = document.getElementById('dot-field');
   const ringIndex  = document.getElementById('ring-index');
   const benchDust  = document.getElementById('bench-dust');
-  const benchBoot  = document.getElementById('bench-boot');
 
   if (benchTrack) {
     /* The ground. Static by design, and a few dots lit so the grid reads as
@@ -1358,60 +1425,6 @@ const PROJECTS = [
     if (benchCount) {
       const liveJobs = ORDERED.filter(function (j) { return j.status !== 'soon'; }).length;
       benchCount.textContent = liveJobs + ' jobs · ' + shots.length + ' photographs';
-    }
-
-    /* Real local time in Manila, read from the reader's own machine. If the
-     * browser has no time-zone data the clock is emptied rather than showing
-     * a wrong hour. */
-    const benchClock = document.getElementById('bench-clock');
-    if (benchClock) {
-      const tick = function () {
-        try {
-          benchClock.textContent = new Intl.DateTimeFormat('en-GB', {
-            timeZone: 'Asia/Manila',
-            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-          }).format(new Date());
-        } catch (e) {
-          benchClock.textContent = '';
-          return;
-        }
-        window.setTimeout(tick, 1000);
-      };
-      tick();
-    }
-
-    /* ---- The counted entrance -------------------------------------------
-     *
-     * It counts, then lifts. Two switches: one fades it, one removes it from
-     * the page outright on an unconditional timer, because the failure mode
-     * that has actually happened in this project three times is the
-     * animation not running at all.
-     */
-    if (benchBoot) {
-      const pct = document.getElementById('bench-pct');
-      const fill = document.getElementById('bench-fill');
-
-      const drop = function () {
-        benchBoot.setAttribute('data-done', 'true');
-        window.setTimeout(function () { benchBoot.setAttribute('data-gone', 'true'); }, 700);
-      };
-      // Fires no matter what else happens above it.
-      window.setTimeout(function () { benchBoot.setAttribute('data-gone', 'true'); }, 4200);
-
-      if (reduceMotion.matches) {
-        drop();
-      } else {
-        let p = 0;
-        const count = function () {
-          p = Math.min(100, p + 3 + Math.random() * 9);
-          if (pct) pct.textContent = 'Loading ' + Math.round(p) + '%';
-          if (fill) fill.style.width = p + '%';
-          if (p < 100) window.setTimeout(count, 55);
-          else window.setTimeout(drop, 380);
-        };
-        count();
-        window.setTimeout(drop, 3200);
-      }
     }
 
     /* ---- Grab the ring and turn it -------------------------------------
