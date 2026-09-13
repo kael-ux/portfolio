@@ -1,0 +1,112 @@
+/* =========================================================================
+ * Type variant B — grotesque
+ *
+ * Loaded AFTER styles.css, and it touches nothing but type. Same tokens,
+ * same layout, same motion — so what you are comparing is the typeface and
+ * only the typeface.
+ *
+ * Space Grotesk for display, Archivo for body ("Minimalist Portfolio"
+ * pairing). Space Grotesk has enough character in its lowercase g, a and
+ * the cut of its numerals to read as chosen rather than default, which is
+ * what keeps an all-grotesque page from looking like an unstyled draft.
+ *
+ * Tracking is size-specific, not one value everywhere. Large text reads too
+ * loose as it grows, so display tightens; body sits near zero. A single
+ * letter-spacing value is always wrong somewhere.
+ * ========================================================================= */
+
+:root {
+  --font-display: "Space Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body:    "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* Newsreader is a serif and carried its own optical sizing; a grotesque at
+   the same values reads bigger and looser. These bring it back. */
+
+.display,
+h1 {
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  font-weight: 600;
+}
+
+h2 {
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  font-weight: 600;
+}
+
+h3 {
+  letter-spacing: -0.012em;
+  font-weight: 600;
+}
+
+.wordmark {
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+/* Body copy stays at neutral tracking — tightening it here would cost
+   legibility for the older, non-technical visitors the site is built for. */
+body,
+p,
+.lede,
+dd {
+  letter-spacing: 0;
+}
+
+/* Archivo runs a touch wider than Public Sans at the same size, so the
+   measure is pulled in slightly to hold the same line length. */
+:root { --measure: 66ch; }
+
+/* ---- The comparison bar (this page only) ----------------------------- */
+
+.type-compare {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-strong);
+}
+.type-compare-in {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+.type-compare p {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.type-compare strong { color: var(--text); }
+.type-compare a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+/* The site header is sticky at 0 too; it sits below this bar. */
+.site-header { top: 46px; }
+
+@media (max-width: 900px) {
+  .type-compare p .hide-sm { display: none; }
+}
+@media (max-width: 600px) {
+  .type-compare-in { padding: 0 var(--space-sm); }
+}
