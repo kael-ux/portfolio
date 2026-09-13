@@ -67,9 +67,10 @@ const PROJECTS = [
     ]
   },
   {
-    id: '02',
+    id: '04',
     category: 'tech',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the strongest three
     title: 'Full laptop teardown, clean and upgrade',
     ownMachine: true,
     problem: 'My own HP laptop had slowed to a crawl and was running hot.',
@@ -94,9 +95,10 @@ const PROJECTS = [
     ]
   },
   {
-    id: '04',
+    id: '05',
     category: 'tech',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the strongest three
     title: 'Frame drops and stuttering — fixed without new parts',
     problem: 'Gab\'s PC was dropping frames and stuttering in games.',
     did: 'Full strip and clean, dust cleared out of the cooler and intakes, and repasted the CPU thermal compound. Cables tidied on reassembly.',
@@ -108,9 +110,10 @@ const PROJECTS = [
     ]
   },
   {
-    id: '05',
+    id: '06',
     category: 'tech',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the strongest three
     title: 'NVMe drive fitted and Windows installed clean',
     ownMachine: true,
     problem: 'My own PC needed faster storage, and a clean start instead of dragging an old install across.',
@@ -121,9 +124,10 @@ const PROJECTS = [
     extras: []
   },
   {
-    id: '06',
+    id: '07',
     category: 'tech',
     status: 'live',
+    secondary: true,   // behind "more work" — real, just not the strongest three
     title: 'BIOS update so a new CPU would run',
     problem: 'A friend was swapping in a Ryzen 7 5700X, and his motherboard needed a BIOS update before it would recognise the new chip.',
     did: 'Checked the board revision, matched it to the right firmware version, and ran the flash through to completion without interrupting power.',
@@ -134,7 +138,7 @@ const PROJECTS = [
     extras: []
   },
   {
-    id: '07',
+    id: '02',
     category: 'tech',
     status: 'live',
     title: 'Stuttering in Valheim, and 60–70°C sitting idle',
@@ -440,7 +444,9 @@ const PROJECTS = [
     // It is the strongest job on the page and the only one with a hard number.
     const flagship = index === 0 ? ' is-flagship' : '';
 
-    return '<li class="case reveal' + flagship + '" data-category="' + job.category + '"' + stagger + '>' +
+    return '<li class="case reveal' + flagship + (job.secondary ? ' is-secondary' : '') + '" ' +
+      'data-category="' + job.category + '"' +
+      (job.secondary ? ' data-secondary="true"' : '') + stagger + '>' +
       '<div class="case-head">' +
         '<span class="case-id">' + esc(job.id) + '</span>' +
         '<span class="case-tag">' + esc(cat) + '</span>' +
@@ -458,30 +464,84 @@ const PROJECTS = [
       '</li>';
   }
 
+  /* Ordered by id, so the numbering a visitor reads down the page is the
+   * order the cards are actually in. The three strongest jobs hold 01–03;
+   * the rest keep their numbers but sit behind a disclosure.
+   *
+   * Why hide any of it: seven repair jobs in a row all read as the same job.
+   * The two paid client builds and the one before/after with a real
+   * temperature drop do the selling; the other four are corroboration. They
+   * stay on the page — burying real work would be the opposite of the point
+   * — but they stop competing with the evidence that actually converts.
+   */
+  const ORDERED = PROJECTS.slice().sort(function (a, b) {
+    return a.id.localeCompare(b.id);
+  });
+
   if (grid) {
-    grid.innerHTML = PROJECTS.map(cardHTML).join('');
+    grid.innerHTML = ORDERED.map(function (job, i) {
+      const html = cardHTML(job, i);
+      // The disclosure trigger goes before the content it reveals, so the
+      // reading order and the tab order both make sense.
+      if (job.id === '04') {
+        return '<li class="work-more-row">' +
+          '<button type="button" class="work-more" id="work-more" ' +
+          'aria-expanded="false" aria-controls="work-grid">' +
+          '<span class="work-more-label">Show 4 more tech support jobs</span>' +
+          '<span class="work-more-mark" aria-hidden="true"></span>' +
+          '</button></li>' + html;
+      }
+      return html;
+    }).join('');
     observeReveals(grid);          // cards exist now, so watch them too
   }
 
-  function applyFilter(value, fromClick) {
+  const moreBtn = document.getElementById('work-more');
+  let showSecondary = false;
+  let activeFilter = 'all';
+
+  /* One function decides what is on screen, because visibility is the product
+   * of two independent things — the category filter and the disclosure. Two
+   * separate handlers each setting `hidden` would fight each other, and the
+   * loser would be whichever ran last. */
+  function updateWork(fromClick) {
     if (!grid) return;
     const cards = grid.querySelectorAll('.case');
     let shown = 0;
+    let hiddenByDisclosure = 0;
 
     cards.forEach(function (card) {
-      const match = value === 'all' || card.dataset.category === value;
-      card.hidden = !match;
-      if (match) shown++;
+      const matchesFilter = activeFilter === 'all' || card.dataset.category === activeFilter;
+      const collapsed = card.dataset.secondary === 'true' && !showSecondary;
+
+      if (matchesFilter && collapsed) hiddenByDisclosure++;
+      card.hidden = !matchesFilter || collapsed;
+      if (!card.hidden) shown++;
     });
 
-    // Filtering is a deliberate action, not a scroll. A card brought back by
-    // a filter must appear immediately — never sit at zero opacity waiting
-    // for an intersection that already happened while it was hidden.
+    // The trigger is pointless when the current filter has nothing behind it.
+    const row = grid.querySelector('.work-more-row');
+    if (row) row.hidden = hiddenByDisclosure === 0 && !showSecondary;
+
+    if (moreBtn) {
+      moreBtn.setAttribute('aria-expanded', String(showSecondary));
+      const label = moreBtn.querySelector('.work-more-label');
+      if (label) {
+        label.textContent = showSecondary
+          ? 'Show fewer'
+          : 'Show ' + hiddenByDisclosure + ' more tech support job' + (hiddenByDisclosure === 1 ? '' : 's');
+      }
+    }
+
+    // Filtering and expanding are deliberate actions, not scrolls. A card
+    // brought back this way must appear immediately — never sit at zero
+    // opacity waiting for an intersection that already happened while it
+    // was hidden.
     if (fromClick) revealAll(grid);
 
     if (filterBar) {
       filterBar.querySelectorAll('[data-filter]').forEach(function (btn) {
-        btn.setAttribute('aria-pressed', String(btn.dataset.filter === value));
+        btn.setAttribute('aria-pressed', String(btn.dataset.filter === activeFilter));
       });
     }
 
@@ -490,13 +550,42 @@ const PROJECTS = [
     }
   }
 
+  function applyFilter(value, fromClick) {
+    activeFilter = value;
+    updateWork(fromClick);
+  }
+
+  if (moreBtn) {
+    moreBtn.addEventListener('click', function () {
+      const wasCollapsed = !showSecondary;
+      showSecondary = !showSecondary;
+      updateWork(true);
+
+      // Collapsing can leave the button above the fold with the page scrolled
+      // past where the cards used to be. Bring it back into view, and move
+      // focus to the first revealed card on expand so a keyboard user lands
+      // on the new content rather than being left on the trigger.
+      if (wasCollapsed) {
+        const first = grid.querySelector('.case[data-secondary="true"]:not([hidden])');
+        if (first) {
+          first.setAttribute('tabindex', '-1');
+          first.focus({ preventScroll: true });
+          first.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+        }
+      } else {
+        moreBtn.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+      }
+    });
+  }
+
   if (filterBar) {
     filterBar.addEventListener('click', function (e) {
       const btn = e.target.closest('[data-filter]');
       if (btn) applyFilter(btn.dataset.filter, true);
     });
-    applyFilter('all');
   }
+
+  if (grid) updateWork(false);
 
   /* ---- Direct contact links ------------------------------------------- */
 
