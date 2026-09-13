@@ -1068,6 +1068,13 @@ img { max-width: 100%; height: auto; display: block; }
   flex: 1;
   min-height: 0;
   display: grid;
+  /* minmax(0, 1fr), not `auto`. With auto tracks the row grows to the
+     picture's own height, so the image's `max-height: 100%` resolved against
+     itself and did nothing — a 1350x1800 photo rendered 1789px tall inside a
+     727px stage, got clipped, and could not be dragged because dragging was
+     switched off at 100%. That is the "stuck" photo. */
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   place-items: center;
   overflow: hidden;
   background: var(--surface);
@@ -1076,11 +1083,14 @@ img { max-width: 100%; height: auto; display: block; }
 .lightbox-stage img {
   max-width: 100%;
   max-height: 100%;
+  object-fit: contain;
   transform-origin: center center;
   user-select: none;
   -webkit-user-drag: none;
+  will-change: transform;
 }
-.lightbox-stage.is-zoomed { cursor: grab; }
+/* Grabbable whenever there is something to move, not only when zoomed. */
+.lightbox-stage.is-pannable { cursor: grab; }
 .lightbox-stage.is-dragging { cursor: grabbing; }
 
 .lightbox-bar {

@@ -65,7 +65,7 @@ const PORTRAIT = null;
 const IMG_V = '?v=2';
 
 const IMAGE_DIMS = {
-  'iga-landing': [1200, 900],
+  'iga-landing': [1200, 900],   // the still that loads first; the animated variant is 640x480, same 4:3,
   'laptop-teardown': [1800, 1013],
   'nvme-os-install': [1800, 1013],
   'office-build-finished': [1342, 1800],
@@ -191,7 +191,10 @@ const PROJECTS = [
     did: 'This is what I build as a web developer: one page whose whole job is turning attention into enquiries. For IGA that meant their real brand colour sampled from their own logo file, the founder\'s history, the full instructor roster, their own photos and their real member testimonials — laid out so a first-time visitor knows within seconds what it is, where it happens, and how to start.',
     result: 'One page that does the job a bio link cannot. The same build works for anyone sitting on an audience they are not converting — clubs, gyms, shops, services. IGA\'s own version stays concept work until the club signs it off: their page, their call.',
     image: 'iga-landing',
-    alt: 'The IGA Kendo Club landing page: a deep navy hero reading "Enjoy Kendo!" over the club kamon, with the club name and navigation above it.',
+    // The page animates — two kendoka strike together (aiuchi) on a 4.6s loop.
+    // A still picture of it undersells the work, so the card plays the loop.
+    animated: true,
+    alt: 'The IGA Kendo Club landing page: a deep navy hero reading "Enjoy Kendo!" over the club kamon, with two kendoka striking together below it.',
     link: { href: 'work/iga-kendo/', label: 'Open the live design', internal: true },
     extras: []
   },
@@ -387,16 +390,40 @@ const PROJECTS = [
     });
   }
 
-  function pictureFor(slug, alt, eager) {
+  function pictureFor(slug, alt, eager, animated) {
     // Per-image dimensions. A single hardcoded 1200x900 was what forced every
     // photo into one landscape shape; these are the real numbers.
     const d = IMAGE_DIMS[slug] || [1200, 900];
-    return '<picture>' +
+
+    /* An animated variant ships as data-* and is swapped in by script, never
+     * as the default source. A moving image cannot be stopped by CSS, so
+     * `prefers-reduced-motion` can only be honoured by not loading it — and
+     * the still frame has to be what arrives if the script never runs. */
+    const anim = animated
+      ? ' data-anim-webp="assets/img/' + slug + '-anim.webp' + IMG_V + '"' +
+        ' data-anim-gif="assets/img/' + slug + '.gif' + IMG_V + '"'
+      : '';
+
+    return '<picture' + anim + '>' +
       '<source srcset="assets/img/' + slug + '.webp' + IMG_V + '" type="image/webp">' +
       '<img src="assets/img/' + slug + '.jpg' + IMG_V + '" alt="' + esc(alt) + '" ' +
       'width="' + d[0] + '" height="' + d[1] + '" decoding="async" ' +
       'loading="' + (eager ? 'eager' : 'lazy') + '">' +
       '</picture>';
+  }
+
+  /* Upgrade the flagged pictures to their moving versions. Off entirely under
+   * reduced motion, and if anything here fails the still image is already on
+   * screen, so the worst case is simply a photo that does not move. */
+  function animateThumbnails(scope) {
+    if (reduceMotion.matches) return;
+    (scope || document).querySelectorAll('picture[data-anim-webp]').forEach(function (pic) {
+      const source = pic.querySelector('source');
+      const img = pic.querySelector('img');
+      if (!source || !img) return;
+      source.srcset = pic.dataset.animWebp;
+      img.src = pic.dataset.animGif;
+    });
   }
 
   function cardHTML(job, index) {
@@ -425,7 +452,7 @@ const PROJECTS = [
       media = '<div class="case-media">' +
         '<button type="button" class="media-btn" data-full="' + job.image + '" ' +
         'aria-label="View larger: ' + esc(job.alt) + '">' +
-        pictureFor(job.image, job.alt, index === 0) +
+        pictureFor(job.image, job.alt, index === 0, job.animated) +
         '</button></div>';
     } else if (job.noPhoto) {
       media = '<p class="case-nophoto">' + esc(job.noPhoto) + '</p>';
@@ -534,6 +561,7 @@ const PROJECTS = [
       return html;
     }).join('');
     observeReveals(grid);          // cards exist now, so watch them too
+    animateThumbnails(grid);
   }
 
   const moreBtn = document.getElementById('work-more');
@@ -881,25 +909,75 @@ const PROJECTS = [
     let dragging = false, startX = 0, startY = 0;
     let opener = null;
 
+    /* How far the picture may be moved on each axis: half the overhang, so
+     * you can reach either edge and no further. Zero when it already fits. */
+    function limits() {
+      const s = lbStage.getBoundingClientRect();
+      const w = lbImg.offsetWidth * scale;
+      const h = lbImg.offsetHeight * scale;
+      return {
+        x: Math.max(0, (w - s.width) / 2),
+        y: Math.max(0, (h - s.height) / 2)
+      };
+    }
+
+    function canPan() {
+      const l = limits();
+      return l.x > 0.5 || l.y > 0.5;
+    }
+
+    /* Progressive resistance past an edge instead of a wall. Real things slow
+     * before they stop, and a hard stop reads as frozen rather than as "there
+     * is nothing more here". */
+    function rubber(over, dimension) {
+      const c = 0.55;
+      return (over * dimension * c) / (dimension + c * Math.abs(over));
+    }
+
+    function clampPan(x, y, soft) {
+      const l = limits();
+      const s = lbStage.getBoundingClientRect();
+      function axis(v, max, dim) {
+        if (max === 0) return soft ? rubber(v, dim) : 0;
+        if (v > max)  return soft ? max + rubber(v - max, dim) : max;
+        if (v < -max) return soft ? -max - rubber(-max - v, dim) : -max;
+        return v;
+      }
+      return { x: axis(x, l.x, s.width), y: axis(y, l.y, s.height) };
+    }
+
+    function setTransition(ms, easing) {
+      lbImg.style.transitionProperty = ms ? 'transform' : 'none';
+      lbImg.style.transitionDuration = ms ? ms + 'ms' : '0ms';
+      lbImg.style.transitionTimingFunction = easing || 'cubic-bezier(0.22, 1, 0.36, 1)';
+    }
+
     function apply() {
       lbImg.style.transform =
-        'translate(' + panX.toFixed(0) + 'px,' + panY.toFixed(0) + 'px) scale(' + scale + ')';
+        'translate(' + panX.toFixed(1) + 'px,' + panY.toFixed(1) + 'px) scale(' + scale + ')';
       lbLevel.textContent = Math.round(scale * 100) + '%';
       btnIn.disabled = scale >= MAX;
       btnOut.disabled = scale <= MIN;
       btnReset.disabled = scale === 1 && panX === 0 && panY === 0;
       lbStage.classList.toggle('is-zoomed', scale > 1);
+      lbStage.classList.toggle('is-pannable', canPan());
     }
 
-    function setScale(next) {
+    function setScale(next, animate) {
       const clamped = Math.min(MAX, Math.max(MIN, next));
       if (clamped === scale) return;
       scale = clamped;
-      if (scale === 1) { panX = 0; panY = 0; }   // snap back when fully out
+      const c = clampPan(panX, panY, false);
+      panX = c.x; panY = c.y;
+      setTransition(animate === false ? 0 : 260);
       apply();
     }
 
-    function reset() { scale = 1; panX = 0; panY = 0; apply(); }
+    function reset() {
+      scale = 1; panX = 0; panY = 0;
+      setTransition(260);
+      apply();
+    }
 
     function open(slug, alt, trigger) {
       opener = trigger || null;
@@ -958,23 +1036,70 @@ const PROJECTS = [
       if (e.target === lightbox) closeLightbox();
     });
 
-    /* Drag to pan, but only when zoomed in — otherwise dragging does nothing
-       and feels broken. Pointer events cover mouse, touch and pen at once. */
+    /* Drag to pan.
+     *
+     * The old rule was `if (scale <= 1) return` — drag only when zoomed. That
+     * was the bug Cael hit: a portrait photo overflows the stage at 100%, so
+     * there was plenty to move and no way to move it. The rule is now
+     * "is there anything off-screen", which is the only question that matters.
+     *
+     * Three things make it feel like a real object rather than a slideshow:
+     * 1:1 tracking from wherever you grabbed it, progressive resistance at
+     * the edges, and a throw that carries your release velocity.
+     *
+     * The settle is a CSS transition, not requestAnimationFrame. rAF does not
+     * fire in every context — that has bitten this codebase twice — and a
+     * dropped animation frame here would strand the picture outside its own
+     * bounds. A transition is compositor-driven and always resolves.
+     */
+    let vx = 0, vy = 0, lastT = 0, lastX = 0, lastY = 0;
+
+    // Read the live on-screen position, so grabbing mid-throw continues from
+    // where the picture actually is instead of snapping to where it was going.
+    function readLiveTransform() {
+      const m = new DOMMatrixReadOnly(getComputedStyle(lbImg).transform);
+      if (m.a) { panX = m.e; panY = m.f; }
+    }
+
     lbStage.addEventListener('pointerdown', function (e) {
-      if (scale <= 1) return;
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      if (!canPan()) return;
+
+      readLiveTransform();
+      setTransition(0);
+      apply();
+
       dragging = true;
       startX = e.clientX - panX;
       startY = e.clientY - panY;
+      lastX = e.clientX; lastY = e.clientY; lastT = Date.now();
+      vx = vy = 0;
       lbStage.classList.add('is-dragging');
       lbStage.setPointerCapture(e.pointerId);
+      e.preventDefault();
     });
 
     lbStage.addEventListener('pointermove', function (e) {
       if (!dragging) return;
-      panX = e.clientX - startX;
-      panY = e.clientY - startY;
+      const now = Date.now();
+      const dt = now - lastT;
+      if (dt > 0) {
+        // Blend rather than replace, so one jittery sample cannot define the throw.
+        vx = 0.7 * ((e.clientX - lastX) / dt * 1000) + 0.3 * vx;
+        vy = 0.7 * ((e.clientY - lastY) / dt * 1000) + 0.3 * vy;
+        lastX = e.clientX; lastY = e.clientY; lastT = now;
+      }
+      const p = clampPan(e.clientX - startX, e.clientY - startY, true);
+      panX = p.x; panY = p.y;
       apply();
     });
+
+    /* Where a flick would come to rest if it decelerated normally. This is the
+     * exponential-decay form Apple ships, not the physics-textbook one. */
+    function project(v) {
+      const d = 0.995;
+      return (v / 1000) * d / (1 - d);
+    }
 
     function endDrag(e) {
       if (!dragging) return;
@@ -983,9 +1108,55 @@ const PROJECTS = [
       if (e && e.pointerId != null && lbStage.hasPointerCapture(e.pointerId)) {
         lbStage.releasePointerCapture(e.pointerId);
       }
+
+      if (reduceMotion.matches) {
+        const c = clampPan(panX, panY, false);
+        panX = c.x; panY = c.y;
+        setTransition(0);
+        apply();
+        return;
+      }
+
+      const target = clampPan(panX + project(vx), panY + project(vy), false);
+      const dist = Math.hypot(target.x - panX, target.y - panY);
+      // Duration follows the distance so a nudge settles instantly and a throw
+      // gets room to travel, capped so it never feels sluggish.
+      const ms = Math.max(180, Math.min(620, 180 + dist * 0.9));
+      panX = target.x; panY = target.y;
+      setTransition(ms, 'cubic-bezier(0.16, 1, 0.3, 1)');
+      apply();
     }
     lbStage.addEventListener('pointerup', endDrag);
     lbStage.addEventListener('pointercancel', endDrag);
+
+    /* Wheel zooms toward the pointer, so the thing under the cursor stays put
+     * — the behaviour every map and photo viewer has trained people to expect. */
+    lbStage.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      const before = scale;
+      const next = Math.min(MAX, Math.max(MIN, scale * (e.deltaY < 0 ? 1.12 : 1 / 1.12)));
+      if (next === before) return;
+
+      const s = lbStage.getBoundingClientRect();
+      const ox = e.clientX - (s.left + s.width / 2) - panX;
+      const oy = e.clientY - (s.top + s.height / 2) - panY;
+      const k = next / before;
+
+      scale = next;
+      const c = clampPan(panX - ox * (k - 1), panY - oy * (k - 1), false);
+      panX = c.x; panY = c.y;
+      setTransition(0);
+      apply();
+    }, { passive: false });
+
+    // A resize changes the bounds, so what was in-bounds may no longer be.
+    window.addEventListener('resize', function () {
+      if (!lightbox.open) return;
+      const c = clampPan(panX, panY, false);
+      panX = c.x; panY = c.y;
+      setTransition(0);
+      apply();
+    });
 
     // + and - work from the keyboard too, once the dialog has focus.
     lightbox.addEventListener('keydown', function (e) {
