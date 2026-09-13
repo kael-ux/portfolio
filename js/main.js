@@ -1678,10 +1678,9 @@ const PROJECTS = [
       });
     }
 
-    const releaseBtn = document.getElementById('index-release');
     const indexHint = document.getElementById('index-hint');
     const HINT_FREE = 'Pick one to hold the ring and read what was done.';
-    const HINT_HELD = 'Ring held. Release it, or pick the same job again.';
+    const HINT_HELD = 'Ring held. Press Reset view, or pick the same job again.';
     let selectedId = null;
 
     /* Let it go. Everything the selection changed is undone here and nowhere
@@ -1699,7 +1698,6 @@ const PROJECTS = [
           b.setAttribute('aria-pressed', 'false');
         });
       }
-      if (releaseBtn) releaseBtn.hidden = true;
       if (indexHint) indexHint.textContent = HINT_FREE;
       // An explicit Pause still outranks this: releasing a selection must not
       // override a button the reader pressed on purpose.
@@ -1717,7 +1715,6 @@ const PROJECTS = [
         selectedId = id;
         heldByIndex = true;
         cancelIdle();
-        if (releaseBtn) releaseBtn.hidden = false;
         if (indexHint) indexHint.textContent = HINT_HELD;
       }
       if (hold && canDrive && !heldByButton) {
@@ -1765,10 +1762,20 @@ const PROJECTS = [
       });
     }
 
-    if (releaseBtn) {
-      releaseBtn.addEventListener('click', function () {
+    /* Reset view always does something: it lets go of any held job AND puts
+     * the ring back where it started. Each card was given a negative delay of
+     * its share of the cycle, so currentTime 0 is exactly the arrangement the
+     * page arrived in -- no need to remember anything. */
+    const resetBtn = document.getElementById('bench-reset');
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
         clearSelection();
-        benchStrip.focus({ preventScroll: true });
+        if (canDrive) {
+          anims.forEach(function (a) { a.currentTime = 0; });
+          if (!heldByButton) anims.forEach(function (a) { a.play(); });
+        }
+        benchStrip.setAttribute('data-grabbed', 'false');
+        if (readoutStatus) readoutStatus.textContent = 'Ring reset to its starting position.';
       });
     }
 
