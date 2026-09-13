@@ -89,6 +89,7 @@ const PROJECTS = [
     problem: 'A paying client wanted a high-end gaming PC in a white build, put together for them properly.',
     did: 'Specced and built the whole system: Ryzen 9 7900X, Sapphire Nitro+ RX 7800 XT 16GB, B650M Aorus Elite AX, Kingston Fury Beast DDR5, AK620 Digital air cooler, and a 750W Gold full-modular supply. Every cable sleeved and routed.',
     result: 'Sitting at 54°C on air — that reading is on the cooler\'s own display in the photo. No liquid cooling needed to get there.',
+    check: "If a shop quotes you liquid cooling before showing you an air-cooled temperature, ask what the air number was. A good tower cooler handles most consumer CPUs, costs less, and has no pump to fail.",
     image: 'xeth-54c',
     alt: "Inside a white gaming PC: the CPU cooler's built-in display reads 54 degrees Celsius, next to white fans, orange-lit DDR5 memory and a Radeon graphics card.",
     extras: [
@@ -106,6 +107,7 @@ const PROJECTS = [
     problem: 'My own HP laptop had slowed to a crawl and was running hot.',
     did: 'Stripped it down to the bare motherboard, cleared out the dust, upgraded the RAM, and swapped the mechanical hard drive for an SSD.',
     result: 'Back together and back in daily use, booting and loading noticeably faster.',
+    check: "Before paying for any upgrade, open Task Manager's Performance tab and look at your disk. If it says HDD rather than SSD, that is almost certainly your whole problem, and it is the cheapest thing on the list to fix.",
     image: 'laptop-teardown',
     alt: 'An HP laptop stripped down to the bare motherboard, with the keyboard, battery, hard drive caddy and memory module removed and laid out on the desk beside it.',
     extras: []
@@ -118,6 +120,7 @@ const PROJECTS = [
     problem: 'A client needed a desktop for office work and had a tight budget to do it in.',
     did: 'Mixed second-hand and brand-new parts to bring the cost down — used where it was safe to, new where it mattered. Built around a Gigabyte GA-H110M-HD2 with an Intel CPU on the stock cooler, DDR4, a Lexar NS100 SSD and an Inplay 550W 80+ Bronze supply.',
     result: 'A reliable office machine that came in on budget. The client knew which parts were used and which were new before they paid.',
+    check: "Ask for the parts list with “used” or “new” written next to each line. Anyone who will not put that in writing is hiding where the margin is.",
     image: 'office-build-interior',
     alt: 'Inside a completed office desktop: Gigabyte motherboard with an Intel stock cooler, a Lexar solid-state drive, and a 550-watt 80-Plus Bronze power supply, with the cables routed and tied.',
     extras: [
@@ -133,6 +136,7 @@ const PROJECTS = [
     problem: 'Gab\'s PC was dropping frames and stuttering in games.',
     did: 'Full strip and clean, dust cleared out of the cooler and intakes, and repasted the CPU thermal compound. Cables tidied on reassembly.',
     result: 'It was heat, not failing hardware. Sorted without replacing a single part — which is the answer more often than people expect.',
+    check: "Frame drops that get worse the longer you play are almost always heat. Frame drops that are there from the first minute are usually settings or drivers. The timing tells you which conversation to have.",
     image: 'pc-cleaning-service',
     alt: 'A cleaned desktop interior with an MSI motherboard and a large tower air cooler, dust removed and the side panel off.',
     extras: [
@@ -149,6 +153,7 @@ const PROJECTS = [
     problem: 'My own PC needed faster storage, and a clean start instead of dragging an old install across.',
     did: 'Fitted an Edilaca EN600 PRO PCIe Gen3x4 NVMe drive, then did a clean Windows install and put the drivers on from scratch.',
     result: 'Faster storage and a system with none of the old clutter carried over.',
+    check: "Cloning an old Windows install onto a new drive carries every old problem with it. A clean install takes about an hour, costs nothing, and is usually the difference between “faster” and “like new”.",
     image: 'nvme-os-install',
     alt: 'An Edilaca EN600 PRO PCIe NVMe solid-state drive mounted on the motherboard before a clean Windows install.',
     extras: []
@@ -162,6 +167,7 @@ const PROJECTS = [
     problem: 'A friend was swapping in a Ryzen 7 5700X, and his motherboard needed a BIOS update before it would recognise the new chip.',
     did: 'Checked the board revision, matched it to the right firmware version, and ran the flash through to completion without interrupting power.',
     result: 'Board updated and the 5700X ran. This is the job where one mistake bricks the motherboard — it gets done carefully or it doesn\'t get done.',
+    check: "Before buying a CPU for a board you already own, find that board's CPU support list on the maker's site. It gives the minimum BIOS version for each chip. Two minutes of checking saves a dead build.",
     image: null,          // no photo: the only shot shows a third party
     alt: null,
     noPhoto: "No photo — this one was on someone else's machine.",
@@ -175,6 +181,7 @@ const PROJECTS = [
     problem: 'A friend\'s gaming PC was stuttering hard in Valheim. It was also sitting at 60–70°C just idling — before any game was even loaded, which is where the real problem showed.',
     did: 'Full strip and clean: dust out of the case, the filters and every fan. Then pulled the CPU cooler, cleaned off the dried-out thermal paste and repasted it.',
     result: 'Idle temps came down to the sub-50s, from 60–70°C. The stuttering went with the heat, and not a single part was replaced.',
+    check: "Open Task Manager, Performance tab, and leave the machine alone for ten minutes. If it is over 60°C doing nothing, you have a cooling problem, not a hardware one — and cooling problems do not need new parts.",
     image: 'valheim-service',
     alt: 'Inside the machine mid-service: the CPU tower cooler and Radeon graphics card, case open and two fans removed.',
     extras: [
@@ -190,6 +197,7 @@ const PROJECTS = [
     problem: 'A lot of businesses have an audience and no way to convert it. The posts get seen, people get interested, and then there is nowhere for them to go. IGA Kendo Club had exactly that — thousands of views a month and a bio link pointing at nothing, so every interested beginner hit a dead end.',
     did: 'This is what I build as a web developer: one page whose whole job is turning attention into enquiries. For IGA that meant their real brand colour sampled from their own logo file, the founder\'s history, the full instructor roster, their own photos and their real member testimonials — laid out so a first-time visitor knows within seconds what it is, where it happens, and how to start.',
     result: 'One page that does the job a bio link cannot. The same build works for anyone sitting on an audience they are not converting — clubs, gyms, shops, services. IGA\'s own version stays concept work until the club signs it off: their page, their call.',
+    check: "Open your own analytics and find “link clicks” next to “views”. If the ratio is under about one in a thousand, the content is not the problem: there is nowhere to click.",
     image: 'iga-landing',
     // The page animates — two kendoka strike together (aiuchi) on a 4.6s loop.
     // A still picture of it undersells the work, so the card plays the loop.
@@ -206,6 +214,7 @@ const PROJECTS = [
     problem: 'I was offering web work with nothing to show for it. This slot said "coming soon", which is a bad look on the page that is supposed to prove you can do the job.',
     did: 'Designed and built it from scratch — plain HTML, CSS and JavaScript. No framework, no build step, no dependencies. Two themes, AAA contrast on every line of body text, keyboard navigable throughout, and it still works with JavaScript switched off. Deployed on Vercel with security headers and year-long image caching.',
     result: 'Live and loading in under half a second. The proof for this one is the page you are reading.',
+    check: "View source on any site you are quoted for. If the page pulls in a megabyte of framework to show ten paragraphs, you are paying for someone's convenience, not yours.",
     image: null,
     alt: null,
     noPhoto: "No photo needed — you're looking at it.",
@@ -426,6 +435,17 @@ const PROJECTS = [
     });
   }
 
+  /* The free diagnostic. Every job hands the reader something they can do
+   * tonight without paying anybody, including me. It is the strongest thing
+   * on the page precisely because it costs a job to publish. */
+  function checkBlock(job) {
+    if (!job.check) return '';
+    return '<div class="check">' +
+      '<p class="check-label">Check this yourself</p>' +
+      '<p class="check-body">' + esc(job.check) + '</p>' +
+      '</div>';
+  }
+
   function cardHTML(job, index) {
     const cat = CATEGORY_LABEL[job.category] || job.category;
 
@@ -505,6 +525,7 @@ const PROJECTS = [
     const flagship = index === 0 ? ' is-flagship' : '';
 
     return '<li class="case reveal' + flagship + (job.secondary ? ' is-secondary' : '') + '" ' +
+      'id="job-' + job.id + '" ' +
       'data-category="' + job.category + '"' +
       (job.secondary ? ' data-secondary="true"' : '') + stagger + '>' +
       /* Three groups, so the flagship can lay the photo beside the words
@@ -526,6 +547,7 @@ const PROJECTS = [
           '<dt>What I did</dt><dd>' + esc(job.did) + '</dd>' +
           '<dt>Result</dt><dd>' + esc(job.result) + '</dd>' +
         '</dl>' +
+        checkBlock(job) +
         link +
       '</div>' +
       '</li>';
@@ -1236,6 +1258,90 @@ const PROJECTS = [
         bandImg.style.transform = '';
       });
     }
+  }
+
+  /* ---- The bench ------------------------------------------------------
+   *
+   * Every photograph from every job, drifting across the lit strip. Built
+   * from PROJECTS so there is one source of truth: add a job and its
+   * pictures appear here automatically.
+   *
+   * The set is laid down twice. The animation translates by -50%, so the
+   * second copy is exactly what the first one leaves behind and the loop
+   * has no seam. Everything in the duplicate is hidden from assistive tech
+   * and removed from the tab order.
+   */
+
+  const benchTrack = document.getElementById('bench-track');
+  const benchStrip = document.getElementById('bench-strip');
+  const benchPause = document.getElementById('bench-pause');
+
+  if (benchTrack) {
+    // Flatten every job into one photo list, keeping the job it belongs to.
+    const shots = [];
+    ORDERED.forEach(function (job) {
+      if (job.image) shots.push({ slug: job.image, alt: job.alt, job: job });
+      (job.extras || []).forEach(function (x) {
+        shots.push({ slug: x.image, alt: x.alt, job: job });
+      });
+    });
+
+    function layDown(duplicate) {
+      shots.forEach(function (shot) {
+        const a = document.createElement('a');
+        a.className = 'bench-card';
+        a.href = '#job-' + shot.job.id;
+        a.setAttribute('role', 'listitem');
+        a.innerHTML =
+          pictureFor(shot.slug, duplicate ? '' : shot.alt, false) +
+          '<p class="bc-title">' + esc(CATEGORY_LABEL[shot.job.category] || shot.job.category) + '</p>' +
+          '<p class="bc-sub">Job ' + esc(shot.job.id) + '</p>';
+        if (duplicate) {
+          a.setAttribute('aria-hidden', 'true');
+          a.setAttribute('tabindex', '-1');
+        }
+        benchTrack.appendChild(a);
+      });
+    }
+    layDown(false);
+    layDown(true);
+
+    /* Motion that starts on its own and runs past a few seconds needs a real
+     * way to stop it. Hovering and focusing both pause the drift, but neither
+     * of those exists on a touchscreen, so there is a button. */
+    if (benchPause) {
+      if (reduceMotion.matches) {
+        benchPause.hidden = true;                 // nothing is moving to pause
+      } else {
+        benchPause.addEventListener('click', function () {
+          const paused = benchStrip.getAttribute('data-paused') === 'true';
+          benchStrip.setAttribute('data-paused', String(!paused));
+          benchPause.textContent = paused ? 'Pause' : 'Resume';
+          benchPause.setAttribute('aria-pressed', String(!paused));
+        });
+      }
+    }
+
+    /* A bench card points at a written record. Mark the target so the jump
+     * from a photograph to its story is never ambiguous. */
+    function markJob() {
+      grid.querySelectorAll('.case.is-target').forEach(function (el) {
+        el.classList.remove('is-target');
+      });
+      const hash = window.location.hash;
+      if (!hash || hash.length < 2) return;
+      const target = grid.querySelector(hash.replace('#job-', '#job-'));
+      if (target) {
+        // A record hidden behind the disclosure has to come back first.
+        if (target.hidden && target.dataset.secondary === 'true') {
+          showSecondary = true;
+          updateWork(true);
+        }
+        target.classList.add('is-target');
+      }
+    }
+    window.addEventListener('hashchange', markJob);
+    markJob();
   }
 
   /* ---- Immersive navigation to a hosted case study --------------------
