@@ -101,7 +101,7 @@
   --radius:    10px;
   --measure:   66ch;   /* Archivo runs wider than Public Sans at the same size */
   --wrap:      1120px;
-  --header-h:  76px;
+  --header-h:  54px;
 
   --t-fast:    150ms;
   --t-base:    200ms;
@@ -221,37 +221,42 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ---------- 4. Header ---------------------------------------------------- */
 
+/* The page chrome speaks the same language as the frame around the ring:
+   mono capitals, a hairline, and the same ambient wash of the key light
+   across the top. It is a strip of data, not a masthead -- so it stays thin
+   and does not grow or shrink as you scroll. */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: var(--header-bg);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid transparent;
-  transition: border-color var(--t-base) var(--ease),
-              background-color var(--t-base) var(--ease);
+  background:
+    linear-gradient(180deg, rgba(159, 208, 228, 0.09) 0%, transparent 80%),
+    var(--header-bg);
+  backdrop-filter: blur(14px) saturate(150%);
+  border-bottom: 1px solid var(--border);
 }
-.site-header.is-scrolled { border-bottom-color: var(--border); }
+/* Daylight has no beam to wash anything with. */
+:root[data-theme="light"] .site-header { background: var(--header-bg); }
+.site-header.is-scrolled { border-bottom-color: var(--border-strong); }
 
 .header-inner {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-2xs);
   min-height: var(--header-h);
-  transition: min-height var(--t-base) var(--ease);
 }
-.site-header.is-scrolled .header-inner { min-height: 60px; }
 
 .wordmark {
   display: inline-flex;
   align-items: center;
   min-height: 44px;          /* it is a link — it needs a real touch target */
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
   color: var(--text);
   text-decoration: none;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
   margin-right: auto;
 }
 .wordmark:hover { color: var(--accent); }
@@ -266,24 +271,49 @@ img { max-width: 100%; height: auto; display: block; }
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 var(--space-sm);
-  border-radius: var(--radius);
-  color: var(--text);
-  font-size: 0.98rem;
-  font-weight: 500;
+  padding: 0 var(--space-xs);
+  border-radius: 2px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   text-decoration: none;
-  transition: background-color var(--t-fast) var(--ease),
-              color var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease);
 }
-.nav a:hover { background: var(--surface-2); color: var(--text); }
+.nav a:hover { background: transparent; color: var(--text); }
 
-/* Contact is always a filled button so it never gets lost. */
+/* Contact is the one item allowed to carry the accent, so the way to reach
+   him is never just another word in a row of words. */
 .nav .nav-cta {
-  background: var(--accent);
-  color: var(--on-accent);
-  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  padding: 0 var(--space-sm);
+  margin-left: var(--space-2xs);
 }
-.nav .nav-cta:hover { background: var(--accent-hover); color: var(--on-accent); }
+.nav .nav-cta:hover { background: var(--accent); color: var(--on-accent); }
+
+/* The clock reads as instrument data, not navigation: mono, muted, and
+   tabular-nums so a ticking second never changes its width and nudges the
+   toggle beside it. */
+.header-clock {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  padding-right: var(--space-2xs);
+}
+
+/* Under 700px the nav itself is tight; the clock is the first thing that can
+   go, because nothing depends on it. */
+@media (max-width: 700px) {
+  .header-clock { display: none; }
+}
 
 .theme-toggle {
   display: inline-flex;
@@ -292,10 +322,11 @@ img { max-width: 100%; height: auto; display: block; }
   width: 44px;
   height: 44px;
   flex: none;
+  margin-left: var(--space-2xs);
   padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 2px;
+  background: transparent;
   color: var(--text);
   cursor: pointer;
   transition: background-color var(--t-fast) var(--ease),
@@ -303,7 +334,7 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .theme-toggle:hover { background: var(--surface-2); border-color: var(--border-strong); }
 
-.icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .icon-moon { fill: currentColor; stroke: none; }
 
 /* Dark theme shows the sun (the action: go light). Light shows the moon. */
@@ -386,35 +417,43 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 .hero-centred .wrap { text-align: center; }
+/* Everything in the centred hero shares one rule. A ch-based max-width with
+   margin 0 is what pinned the eyebrow and the credentials line to the left:
+   they were centring their TEXT inside a box that was itself hard left. The
+   auto margins centre the box; text-align then centres the text in it. */
 .hero-centred .display,
-.hero-centred .hero-lede { margin-inline: auto; }
+.hero-centred .hero-lede,
+.hero-centred .eyebrow,
+.hero-centred .hero-meta { margin-inline: auto; }
 .hero-centred .hero-lede { max-width: 52ch; }
 .hero-centred .hero-actions { justify-content: center; }
-.hero-centred .hero-meta { justify-content: center; }
-/* The rail keeps its two ends pinned even when everything between is
-   centred -- it is corner data, not a caption. */
-.hero-centred .hero-rail { text-align: left; }
-.hero-centred .hero-rail .hero-clock { text-align: right; }
-
-.hero-rail {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
+/* The opening label sits centred over the headline with nothing else on its
+   line. The leading rule every other section label carries is dropped here:
+   a rule needs something to run from, and a centred label has no edge. */
+.hero-centred .eyebrow {
+  justify-content: center;
   margin-bottom: var(--space-md);
-  padding-bottom: var(--space-xs);
-  border-bottom: 1px solid var(--border);
 }
-.hero-rail .eyebrow { margin: 0; }
-.hero-clock {
-  margin: 0;
+.hero-centred .eyebrow::before { display: none; }
+
+/* The credentials line: the quietest thing in the hero, and the last read.
+   Centred with the rest of the column, and held well clear of the buttons so
+   it reads as a footnote to them rather than a third action. */
+.hero-meta {
+  /* Wide enough to hold the whole credential on one line on a desktop; it
+     still wraps on its own when the viewport cannot take it. The inherited
+     ch-based cap broke it mid-phrase, after "Hands-on since". The line is
+     short, so the wrap is the only constraint it needs; it wraps by itself
+     on a phone. */
+  max-width: none;
+  margin: var(--space-lg) 0 0;
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
   color: var(--text-muted);
 }
+.hero-centred .hero-meta { text-align: center; }
 
 .hero .display { margin-bottom: var(--space-md); }
 
@@ -431,19 +470,6 @@ img { max-width: 100%; height: auto; display: block; }
   margin-bottom: var(--space-xl);
 }
 
-.hero-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-  max-width: none;
-  margin: 0;
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--border);
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  letter-spacing: 0.02em;
-  color: var(--text-muted);
-}
 
 /* ---------- 5c. Services strip ------------------------------------------- */
 
@@ -2283,7 +2309,6 @@ html:not(.js) .page-boot { display: none; }
   height: 1px;
   background: var(--accent);
 }
-.hero-centred .hero-rail .eyebrow { justify-content: flex-start; }
 
 /* Services: three panels, numbered, standing on the void. */
 .service {
