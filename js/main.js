@@ -22,7 +22,14 @@ const CONTACT = {
   email: '',
   // Display format is what people read. Link format is what the phone dials.
   whatsappDisplay: '',
-  whatsappLink: ''                  // international, no + and no spaces
+  whatsappLink: '',                 // international, no + and no spaces
+
+  /* LinkedIn. Paste the full profile URL -- the one the browser shows when
+   * you are on your own profile, e.g. https://www.linkedin.com/in/your-name/
+   * Leave it empty and the row removes itself; it never renders a dead link.
+   * linkedinDisplay is what people read. Leave it blank to show the handle. */
+  linkedin: '',
+  linkedinDisplay: ''
 };
 
 /* Where the contact form sends.
@@ -812,6 +819,12 @@ const PROJECTS = [
 
   const hasEmail = !!CONTACT.email;
   const hasWhatsApp = !!CONTACT.whatsappLink;
+  const hasLinkedIn = !!CONTACT.linkedin;
+
+  /* Shown as the handle unless a display name is given, so the row reads as
+   * a name rather than a 60-character URL. */
+  const linkedInText = CONTACT.linkedinDisplay ||
+    (CONTACT.linkedin || '').replace(/\/+$/, '').split('/').pop() || 'Profile';
 
   // A row with no destination is worse than no row — it looks like a link and
   // does nothing. Each one is removed entirely unless it has somewhere to go.
@@ -832,16 +845,21 @@ const PROJECTS = [
   fillOrRemove('direct-whatsapp', hasWhatsApp ? 'https://wa.me/' + CONTACT.whatsappLink : '',
                CONTACT.whatsappDisplay);
 
+  fillOrRemove('direct-linkedin', hasLinkedIn ? CONTACT.linkedin : '', linkedInText);
+
   const waLink = document.getElementById('direct-whatsapp');
   if (waLink) { waLink.rel = 'noopener'; waLink.target = '_blank'; }
+
+  const liLink = document.getElementById('direct-linkedin');
+  if (liLink) { liLink.rel = 'noopener'; liLink.target = '_blank'; }
 
   // Can a message actually reach him? A form endpoint delivers on its own; with
   // no endpoint the form falls back to the visitor's mail app, which needs an
   // address. With neither, nothing sent from this page goes anywhere.
-  const canDeliver = !!FORM_ENDPOINT || hasEmail;
+  const canDeliver = !!FORM_ENDPOINT || hasEmail || hasLinkedIn;
 
   const directCard = document.querySelector('.contact-direct');
-  if (directCard && !hasEmail && !hasWhatsApp) {
+  if (directCard && !hasEmail && !hasWhatsApp && !hasLinkedIn) {
     directCard.innerHTML =
       '<h3>Direct contact details coming soon</h3>' +
       '<p class="contact-direct-note">' +
