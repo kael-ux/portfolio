@@ -28,8 +28,11 @@ const CONTACT = {
    * you are on your own profile, e.g. https://www.linkedin.com/in/your-name/
    * Leave it empty and the row removes itself; it never renders a dead link.
    * linkedinDisplay is what people read. Leave it blank to show the handle. */
-  linkedin: '',
-  linkedinDisplay: ''
+  /* Percent-encoded rather than a literal n-tilde: the raw character works in
+     a modern browser, but %C3%B1 also survives being copied, pasted into an
+     email client, or read by anything older. Same profile either way. */
+  linkedin: 'https://www.linkedin.com/in/cael-marvin-bola%C3%B1os-90a678191',
+  linkedinDisplay: 'Cael Marvin Bolaños'
 };
 
 /* Where the contact form sends.
