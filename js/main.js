@@ -1492,13 +1492,62 @@ const PROJECTS = [
      * stays exactly as it was — the ring still turns, it just cannot be
      * grabbed. Nothing depends on this working.
      */
-    const RING_KEYFRAMES = [
-      { offset: 0,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.72)', zIndex: 3 },
-      { offset: 0.25, transform: 'translateX(0px) translateY(68px) scale(1.1) rotate(0deg) skewY(0deg)',        filter: 'brightness(1.14)', zIndex: 9 },
-      { offset: 0.5,  transform: 'translateX(330px) translateY(30px) scale(.78) rotate(3deg) skewY(-1.6deg)',   filter: 'brightness(.72)', zIndex: 3 },
-      { offset: 0.75, transform: 'translateX(0px) translateY(-54px) scale(.48) rotate(0deg) skewY(0deg)',       filter: 'brightness(.52)', zIndex: 1 },
-      { offset: 1,    transform: 'translateX(-330px) translateY(30px) scale(.78) rotate(-3deg) skewY(1.6deg)',  filter: 'brightness(.72)', zIndex: 3 }
-    ];
+    /* The turn, read off the stylesheet rather than written twice.
+     *
+     * A custom property holding clamp() or min() does NOT resolve to pixels
+     * through getComputedStyle -- it comes back as the literal expression --
+     * so a probe element is given the property as its width and measured.
+     * That yields the real px the browser is using at this viewport, which
+     * is exactly what WAAPI needs.
+     *
+     * Everything the ring does geometrically therefore has ONE source: the
+     * .bench-strip rule in styles.css. The CSS keyframes and these WAAPI
+     * keyframes cannot disagree, because both come from the same numbers.
+     */
+    const probe = document.createElement('div');
+    probe.setAttribute('aria-hidden', 'true');
+    probe.style.cssText = 'position:absolute;top:0;left:0;height:0;visibility:hidden;pointer-events:none;';
+    benchStrip.appendChild(probe);
+
+    function resolvePx(prop) {
+      probe.style.width = 'var(' + prop + ')';
+      const v = parseFloat(window.getComputedStyle(probe).width);
+      return isNaN(v) ? 0 : v;
+    }
+
+    function ringGeometry() {
+      const cs = window.getComputedStyle(benchStrip);
+      return {
+        x:  resolvePx('--ring-x'),
+        yS: resolvePx('--ring-y-side'),
+        yF: resolvePx('--ring-y-front'),
+        yB: resolvePx('--ring-y-back'),
+        sS: (cs.getPropertyValue('--ring-s-side').trim()  || '0.78'),
+        sF: (cs.getPropertyValue('--ring-s-front').trim() || '1.15'),
+        sB: (cs.getPropertyValue('--ring-s-back').trim()  || '0.44')
+      };
+    }
+
+    function ringKeyframes(g) {
+      const side = function (dir) {
+        return 'translateX(' + (dir * g.x) + 'px) translateY(' + g.yS + 'px) scale(' + g.sS +
+               ') rotate(' + (dir * 3) + 'deg) skewY(' + (dir * -1.6) + 'deg)';
+      };
+      return [
+        { offset: 0,    transform: side(-1),
+          filter: 'brightness(.72)',  zIndex: 3 },
+        { offset: 0.25, transform: 'translateX(0px) translateY(' + g.yF + 'px) scale(' + g.sF + ') rotate(0deg) skewY(0deg)',
+          filter: 'brightness(1.14)', zIndex: 9 },
+        { offset: 0.5,  transform: side(1),
+          filter: 'brightness(.72)',  zIndex: 3 },
+        { offset: 0.75, transform: 'translateX(0px) translateY(' + (-g.yB) + 'px) scale(' + g.sB + ') rotate(0deg) skewY(0deg)',
+          filter: 'brightness(.52)',  zIndex: 1 },
+        { offset: 1,    transform: side(-1),
+          filter: 'brightness(.72)',  zIndex: 3 }
+      ];
+    }
+
+    let RING_KEYFRAMES = ringKeyframes(ringGeometry());
     const CYCLE_MS = CYCLE * 1000;
     const DRAG_FULL_TURN = 900;   // px of drag that equals one revolution
     const IDLE_BEFORE_RESUME = 2600;
@@ -1532,6 +1581,40 @@ const PROJECTS = [
      * worst a dropped frame can do here is leave the highlight a beat behind,
      * and rAF has silently failed in this project twice. Without WAAPI no
      * card is ever marked, which simply means no edge highlight. */
+    /* A resize changes every number above, so the turn is rebuilt from the
+     * new geometry. currentTime and play state are carried across, so the
+     * ring keeps turning from precisely where it was rather than snapping
+     * back to its start -- a rotate of the phone must not restart the work.
+     * Debounced, because a desktop drag-resize fires this continuously. */
+    let geomTimer = null;
+    let lastGeomKey = '';
+    function rebuildRing() {
+      if (!canDrive || !anims.length) return;
+      const g = ringGeometry();
+      const key = [g.x, g.yS, g.yF, g.yB, g.sS, g.sF, g.sB].join('|');
+      if (key === lastGeomKey) return;      // same size: nothing to redo
+      lastGeomKey = key;
+      RING_KEYFRAMES = ringKeyframes(g);
+      anims = anims.map(function (a, i) {
+        const at = a.currentTime;
+        const wasPaused = a.playState === 'paused';
+        a.cancel();
+        const next = cards[i].animate(RING_KEYFRAMES, {
+          duration: CYCLE_MS,
+          iterations: Infinity,
+          easing: 'linear',
+          delay: -(CYCLE_MS / cards.length) * i
+        });
+        if (typeof at === 'number') next.currentTime = at;
+        if (wasPaused) next.pause();
+        return next;
+      });
+    }
+    window.addEventListener('resize', function () {
+      window.clearTimeout(geomTimer);
+      geomTimer = window.setTimeout(rebuildRing, 180);
+    }, { passive: true });
+
     if (canDrive && cards.length) {
       let front = null;
       const markFront = function () {

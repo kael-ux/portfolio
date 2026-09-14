@@ -1788,8 +1788,36 @@ body, p, .lede, dd { letter-spacing: 0; }
 .bench-ctl:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 .bench-strip {
+  /* ------------------------------------------------------------------
+   * THE RING'S GEOMETRY, IN ONE PLACE
+   *
+   * Every number the turn depends on is a custom property here, written
+   * fluid so there is no breakpoint where the ring jumps a size. The CSS
+   * keyframes read these directly; main.js reads the RESOLVED value of the
+   * same properties through a probe element, so the two descriptions of the
+   * turn cannot drift apart the way they did before.
+   *
+   * The strip is deliberately sized to what the ring actually occupies. It
+   * used to be a flat 480px against a much smaller turn, which left a dead
+   * band of empty room above the cards.
+   * ------------------------------------------------------------------ */
+  --ring-x:       min(34vw, 520px);                        /* side swing   */
+  --ring-w:       clamp(180px, calc(118px + 13vw), 340px); /* card width   */
+  --ring-img-h:   clamp(100px, calc(62px + 8.2vw), 200px); /* photo height */
+  --ring-y-side:  clamp(14px, 2.2vw, 44px);
+  --ring-y-front: clamp(30px, 4.6vw, 96px);
+  --ring-y-back:  clamp(26px, 4.2vw, 88px);                /* negated below */
+  --ring-s-side:  0.78;
+  --ring-s-front: 1.15;
+  --ring-s-back:  0.44;
+  /* The turn is not vertically symmetric -- the front is scaled up AND
+     pushed down, the back is scaled small -- so its visual centre sits below
+     the strip's. This lifts the whole ring back onto the middle. Measured:
+     without it, 109px of dead band above and 26px below. */
+  --ring-lift:    clamp(16px, 2.6vw, 54px);
+
   position: relative;
-  height: 480px;
+  height: clamp(262px, calc(110px + 18.5vw), 430px);
   border-block: 1px solid var(--border);
   overflow: hidden;
   /* One light source, above and behind the ring, with a warm bounce coming
@@ -1820,7 +1848,13 @@ body, p, .lede, dd { letter-spacing: 0; }
 /* While it is being turned by hand, nothing should also be easing on its
    own — the card should sit exactly where the pointer put it. */
 .bench-strip[data-grabbed="true"] .ring-card { transition: none; }
-@media (max-width: 820px) { .bench-strip { height: 560px; } }
+/* The formulas above already hold their floor on a phone, so the only thing
+   left to correct is the lift: at 375px a 2.6vw lift is under 10px, and the
+   turn needs about 29 to sit on the middle. Nothing else is overridden --
+   one less place for the geometry to disagree with itself. */
+@media (max-width: 620px) {
+  .bench-strip { --ring-lift: 28px; }
+}
 
 /* The ground. Static on purpose: it is the thing the work moves against,
    and a dot grid is what a thermal image looks like at low resolution --
@@ -1974,8 +2008,11 @@ html:not(.js) .page-boot { display: none; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 184px;
-  margin: -64px 0 0 -92px;
+  width: var(--ring-w);
+  /* Centred on the strip by pulling back half its own size. The height is
+     the photograph plus 52px of chrome -- 14px padding and the two lines of
+     label underneath -- so it tracks --ring-img-h without being measured. */
+  margin: calc((var(--ring-img-h) + 52px) / -2 - var(--ring-lift)) 0 0 calc(var(--ring-w) / -2);
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 3px;
@@ -1989,7 +2026,7 @@ html:not(.js) .page-boot { display: none; }
   will-change: transform, filter, opacity;
   transition: opacity 300ms ease, border-color 200ms ease;
 }
-.ring-card img { width: 100%; height: 104px; object-fit: cover; display: block; border-radius: 2px; }
+.ring-card img { width: 100%; height: var(--ring-img-h); object-fit: cover; display: block; border-radius: 2px; }
 /* The front of the turn is where the light is, so that is where the frame
    catches an edge. Everything else keeps the plain border. */
 .ring-card.is-front {
@@ -2019,15 +2056,20 @@ html:not(.js) .page-boot { display: none; }
 /* One ellipse. The skew is the paper flex — the frame bends at the edges of
    the sweep the way a print curls, while the photograph inside stays square. */
 @keyframes ringTurn {
-  0%   { transform: translateX(-330px) translateY(30px)  scale(.78) rotate(-3deg) skewY(1.6deg);
+  0%   { transform: translateX(calc(var(--ring-x) * -1)) translateY(var(--ring-y-side))
+                    scale(var(--ring-s-side)) rotate(-3deg) skewY(1.6deg);
          filter: brightness(.72); z-index: 3; }
-  25%  { transform: translateX(0)      translateY(68px)  scale(1.1) rotate(0)     skewY(0);
+  25%  { transform: translateX(0) translateY(var(--ring-y-front))
+                    scale(var(--ring-s-front)) rotate(0) skewY(0);
          filter: brightness(1.14); z-index: 9; }
-  50%  { transform: translateX(330px)  translateY(30px)  scale(.78) rotate(3deg)  skewY(-1.6deg);
+  50%  { transform: translateX(var(--ring-x)) translateY(var(--ring-y-side))
+                    scale(var(--ring-s-side)) rotate(3deg) skewY(-1.6deg);
          filter: brightness(.72); z-index: 3; }
-  75%  { transform: translateX(0)      translateY(-54px) scale(.48) rotate(0)     skewY(0);
+  75%  { transform: translateX(0) translateY(calc(var(--ring-y-back) * -1))
+                    scale(var(--ring-s-back)) rotate(0) skewY(0);
          filter: brightness(.52); z-index: 1; }
-  100% { transform: translateX(-330px) translateY(30px)  scale(.78) rotate(-3deg) skewY(1.6deg);
+  100% { transform: translateX(calc(var(--ring-x) * -1)) translateY(var(--ring-y-side))
+                    scale(var(--ring-s-side)) rotate(-3deg) skewY(1.6deg);
          filter: brightness(.72); z-index: 3; }
 }
 
