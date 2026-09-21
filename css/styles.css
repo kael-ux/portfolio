@@ -2511,3 +2511,32 @@ html:not(.js) .page-boot { display: none; }
   justify-content: center;
   margin-bottom: var(--space-md);
 }
+
+
+/* The Q&A splits in two: the page questions, then the technical-support ones
+   under their own head. The rule is the same mark every section label carries,
+   so the break reads as structure rather than as a stray heading. */
+.qa-subhead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: var(--space-xl) 0 var(--space-2xs);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-weight: 500;
+}
+.qa-subhead::before {
+  content: "";
+  flex: 0 0 22px;
+  height: 1px;
+  background: var(--accent);
+}
+.qa-subnote {
+  margin: 0 0 var(--space-sm);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  max-width: 62ch;
+}
