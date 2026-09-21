@@ -20,9 +20,11 @@
  */
 const CONTACT = {
   email: '',
-  // Display format is what people read. Link format is what the phone dials.
-  whatsappDisplay: '',
-  whatsappLink: '',                 // international, no + and no spaces
+  /* WhatsApp removed 2026-09-21 on Cael's instruction. The three routes a
+     prospect gets are the booking link, Instagram and LinkedIn. */
+  instagram: 'https://www.instagram.com/kael_901/',
+  instagramDisplay: '@kael_901',
+  booking: 'https://tidycal.com/cael901/30-minute-meeting',
 
   /* LinkedIn. Paste the full profile URL -- the one the browser shows when
    * you are on your own profile, e.g. https://www.linkedin.com/in/your-name/
@@ -818,10 +820,27 @@ const PROJECTS = [
 
   if (grid) updateWork(false);
 
+  /* ---- Sample shots: lazy, with a kill switch --------------------------
+   *
+   * loading="lazy" is right for five images below the fold, and it has failed
+   * in this project twice -- once leaving 1 of 13 ring photographs loaded. The
+   * sample cards are the centre of the offer now, so five empty boxes is not a
+   * failure worth risking for ~95KB.
+   *
+   * Same shape as the scroll-reveal kill switch: give the browser its chance,
+   * then force anything still unloaded. Costs nothing when lazy works.
+   */
+  window.setTimeout(function () {
+    document.querySelectorAll('.sample-shot img').forEach(function (img) {
+      if (!img.complete || img.naturalWidth === 0) { img.loading = 'eager'; }
+    });
+  }, 2500);
+
   /* ---- Direct contact links ------------------------------------------- */
 
   const hasEmail = !!CONTACT.email;
-  const hasWhatsApp = !!CONTACT.whatsappLink;
+  const hasInstagram = !!CONTACT.instagram;
+  const hasBooking = !!CONTACT.booking;
   const hasLinkedIn = !!CONTACT.linkedin;
 
   /* Shown as the handle unless a display name is given, so the row reads as
@@ -845,13 +864,13 @@ const PROJECTS = [
 
   fillOrRemove('direct-email', hasEmail ? 'mailto:' + CONTACT.email : '', CONTACT.email);
   fillOrRemove('footer-email', hasEmail ? 'mailto:' + CONTACT.email : '', CONTACT.email);
-  fillOrRemove('direct-whatsapp', hasWhatsApp ? 'https://wa.me/' + CONTACT.whatsappLink : '',
-               CONTACT.whatsappDisplay);
+  fillOrRemove('direct-instagram', hasInstagram ? CONTACT.instagram : '',
+               CONTACT.instagramDisplay);
 
   fillOrRemove('direct-linkedin', hasLinkedIn ? CONTACT.linkedin : '', linkedInText);
 
-  const waLink = document.getElementById('direct-whatsapp');
-  if (waLink) { waLink.rel = 'noopener'; waLink.target = '_blank'; }
+  const igLink = document.getElementById('direct-instagram');
+  if (igLink) { igLink.rel = 'noopener'; igLink.target = '_blank'; }
 
   const liLink = document.getElementById('direct-linkedin');
   if (liLink) { liLink.rel = 'noopener'; liLink.target = '_blank'; }
@@ -859,10 +878,12 @@ const PROJECTS = [
   // Can a message actually reach him? A form endpoint delivers on its own; with
   // no endpoint the form falls back to the visitor's mail app, which needs an
   // address. With neither, nothing sent from this page goes anywhere.
-  const canDeliver = !!FORM_ENDPOINT || hasEmail || hasLinkedIn;
+  /* A booking link completes on its own -- the only route on this page that
+   * does -- so it counts, and it counts first. */
+  const canDeliver = !!FORM_ENDPOINT || hasEmail || hasLinkedIn || hasBooking;
 
   const directCard = document.querySelector('.contact-direct');
-  if (directCard && !hasEmail && !hasWhatsApp && !hasLinkedIn) {
+  if (directCard && !hasEmail && !hasInstagram && !hasLinkedIn && !hasBooking) {
     directCard.innerHTML =
       '<h3>Direct contact details coming soon</h3>' +
       '<p class="contact-direct-note">' +
@@ -1030,7 +1051,7 @@ const PROJECTS = [
         window.location.href = mailtoFallback(data);
         result.textContent =
           'Opening your email app with the message ready to send. ' +
-          'If nothing happened, email ' + CONTACT.email + ' or message me on WhatsApp.';
+          'If nothing happened, book a call instead: ' + CONTACT.booking;
         result.className = 'form-result is-ok';
         return;
       }
@@ -1050,7 +1071,7 @@ const PROJECTS = [
       }).catch(function () {
         result.textContent =
           'That didn\'t send. Email ' + CONTACT.email +
-          ' or message me on WhatsApp and I\'ll pick it up there.';
+          ' Book a call instead: ' + CONTACT.booking;
         result.className = 'form-result is-bad';
       }).then(function () {
         submitBtn.disabled = false;

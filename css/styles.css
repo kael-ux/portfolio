@@ -2392,3 +2392,122 @@ html:not(.js) .page-boot { display: none; }
   font-size: 0.72rem;
   letter-spacing: 0.08em;
 }
+
+
+/* =========================================================================
+ * SAMPLE LAYOUTS
+ *
+ * Concept pieces, and the design says so before the copy does: every shot
+ * carries a Concept tag pinned to it, so a card lifted out of context still
+ * cannot be mistaken for a delivered job.
+ *
+ * The shots are real screenshots of real pages, which is why they are worth
+ * showing large -- the whole argument of this section is that the craft is
+ * visible at a glance.
+ * ========================================================================= */
+
+.samples-note {
+  margin: calc(var(--space-sm) * -1) 0 var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
+  border-left: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  max-width: 68ch;
+}
+.samples-note strong { color: var(--text); }
+
+.sample-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: clamp(18px, 2.4vw, 30px);
+}
+
+.sample {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 200ms var(--ease), transform 260ms var(--ease);
+}
+.sample:hover { border-color: var(--border-strong); transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) { .sample { transition: none; } .sample:hover { transform: none; } }
+
+.sample-shot {
+  position: relative;
+  display: block;
+  background: var(--bench);
+  border-bottom: 1px solid var(--border);
+  line-height: 0;
+}
+.sample-shot img { width: 100%; height: auto; display: block; }
+.sample-shot:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* Pinned to the shot, not the card, so it travels with the image. */
+.sample-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.sample-body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.sample-niche {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.sample-name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.16rem;
+  letter-spacing: -0.02em;
+}
+.sample-line { margin: 0; color: var(--text-muted); font-size: 0.94rem; }
+.sample-open {
+  margin-top: auto;
+  padding-top: var(--space-xs);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.sample-open span { transition: transform 180ms var(--ease); }
+.sample:hover .sample-open span { transform: translateX(4px); }
+
+/* The booking button in the contact panel: the one route that completes. */
+.direct-book {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
