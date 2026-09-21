@@ -473,7 +473,18 @@ img { max-width: 100%; height: auto; display: block; }
 
 /* ---------- 5c. Services strip ------------------------------------------- */
 
-.services { padding-bottom: var(--space-3xl); }
+/* The section had padding-bottom only, so every bit of its air sat ABOVE its
+   own top border and the cards started 1px under the line. Measured at 1920:
+   96px of dead band above, nothing below the boundary. Padding on both sides
+   puts the space inside the section, where a reader reads it as the section
+   breathing rather than as a hole. */
+.services {
+  padding-top: var(--space-3xl);
+  padding-bottom: var(--space-3xl);
+}
+
+/* The cards no longer start immediately under the heading block. */
+.services .service-list { margin-top: var(--space-lg); }
 
 /* Bento: the lead service gets the big tile. Hierarchy, not decoration —
    tech support is what he actually sells, so it takes the space. */
@@ -1329,7 +1340,10 @@ img { max-width: 100%; height: auto; display: block; }
 @media (max-width: 560px) {
   :root { --header-h: 68px; }
   .wrap { padding-inline: var(--space-sm); }
-  .section { padding-block: var(--space-2xl); }
+  /* .services is not a .section, so it was keeping the full 96px on a phone
+     while everything around it dropped to 64. Same rhythm, same breakpoint. */
+  .section,
+  .services { padding-block: var(--space-2xl); }
   .nav a { padding: 0 var(--space-xs); font-size: 0.92rem; }
   .wordmark { font-size: 1.15rem; }
 }
