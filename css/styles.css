@@ -2554,3 +2554,26 @@ html:not(.js) .page-boot { display: none; }
   font-size: 0.92rem;
   max-width: 62ch;
 }
+
+
+/* ---- About, shortened ---------------------------------------------------
+ *
+ * The opening line carries the whole claim, so it gets the size. The credential
+ * line is demoted to corner data -- mono, muted, one row -- because a buyer
+ * checks it rather than reads it, and it was costing a full paragraph.
+ */
+.about-lead {
+  font-size: clamp(1.1rem, 1.02rem + 0.4vw, 1.3rem);
+  color: var(--text);
+}
+
+.about-foot {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
